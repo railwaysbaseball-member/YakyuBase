@@ -7,3 +7,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# Git workflow
+
+- Commit after each completed feature or fix (one logical change per commit), not after every small file edit.
+- Push to `origin main` automatically right after each commit — no need to ask for confirmation each time.
+- `supabase/seed/` and `.claude/` are gitignored (real player data / local session state) — don't force-add them.
