@@ -13,8 +13,39 @@ import type { FieldingStats } from "@/types/fielding";
 import type { SeasonParameters } from "@/types/seasonParameters";
 
 type PageProps = {
-  searchParams: Promise<{ season?: string }>;
+  searchParams: Promise<{ season?: string; sort?: string; dir?: string }>;
 };
+
+type BattingResultRow = {
+  player: PlayerRow;
+  games: number;
+  calc: ReturnType<typeof calcBatting>;
+  point: number | null;
+  qualified: boolean;
+};
+
+const BATTING_SORT_COLUMNS: {
+  key: string;
+  label: string;
+  defaultDir: "asc" | "desc";
+  getValue: (r: BattingResultRow) => number | string;
+}[] = [
+  { key: "name", label: "選手", defaultDir: "asc", getValue: (r) => r.player.name },
+  { key: "games", label: "試合", defaultDir: "desc", getValue: (r) => r.games },
+  { key: "pa", label: "打席", defaultDir: "desc", getValue: (r) => r.calc.pa },
+  { key: "ab", label: "打数", defaultDir: "desc", getValue: (r) => r.calc.ab },
+  { key: "hits", label: "安打", defaultDir: "desc", getValue: (r) => r.calc.hits },
+  { key: "hr", label: "本塁打", defaultDir: "desc", getValue: (r) => r.calc.homeruns },
+  { key: "rbi", label: "打点", defaultDir: "desc", getValue: (r) => r.calc.rbi },
+  { key: "steals", label: "盗塁", defaultDir: "desc", getValue: (r) => r.calc.steals },
+  { key: "avg", label: "打率", defaultDir: "desc", getValue: (r) => r.calc.avg },
+  { key: "obp", label: "出塁率", defaultDir: "desc", getValue: (r) => r.calc.obp },
+  { key: "slg", label: "長打率", defaultDir: "desc", getValue: (r) => r.calc.slg },
+  { key: "ops", label: "OPS", defaultDir: "desc", getValue: (r) => r.calc.ops },
+  { key: "risp", label: "得点圏", defaultDir: "desc", getValue: (r) => r.calc.risp_avg },
+  { key: "rc27", label: "RC27", defaultDir: "desc", getValue: (r) => r.calc.rc27 },
+  { key: "point", label: "POINT", defaultDir: "desc", getValue: (r) => r.point ?? -Infinity },
+];
 
 type PlayerRow = {
   id: string;
@@ -34,7 +65,7 @@ type BattingRow = {
 };
 
 export default async function StatsPage({ searchParams }: PageProps) {
-  const { season: seasonParam } = await searchParams;
+  const { season: seasonParam, sort: sortParam, dir: dirParam } = await searchParams;
 
   const [
     { data: players, error: playersError },
@@ -129,7 +160,7 @@ export default async function StatsPage({ searchParams }: PageProps) {
     return a.number - b.number;
   });
 
-  const battingResults = playerList
+  const battingResultsBase: BattingResultRow[] = playerList
     .map((player) => {
       const rows = battingByPlayer.get(player.id) ?? [];
       if (rows.length === 0) return null;
@@ -143,12 +174,35 @@ export default async function StatsPage({ searchParams }: PageProps) {
 
       return { player, games: gamesPlayed, calc, point, qualified };
     })
-    .filter((v): v is NonNullable<typeof v> => v !== null)
-    .sort((a, b) => {
-      if (a.qualified !== b.qualified) return a.qualified ? -1 : 1;
-      return b.calc.avg - a.calc.avg;
-    });
-  const battingQualifiedCount = battingResults.filter((r) => r.qualified).length;
+    .filter((v): v is BattingResultRow => v !== null);
+
+  // ヘッダークリックで並び替えが指定されていれば、そちらを優先する（規定打席グループ分けは無視）。
+  // 指定が無ければ従来通り「規定打席以上を上に、打率降順」がデフォルト。
+  const battingSortColumn = BATTING_SORT_COLUMNS.find((c) => c.key === sortParam) ?? null;
+  const battingSortDir: "asc" | "desc" = dirParam === "asc" ? "asc" : "desc";
+
+  const battingResults = battingSortColumn
+    ? [...battingResultsBase].sort((a, b) => {
+        const va = battingSortColumn.getValue(a);
+        const vb = battingSortColumn.getValue(b);
+        const cmp = typeof va === "string" ? va.localeCompare(vb as string) : (va as number) - (vb as number);
+        return battingSortDir === "asc" ? cmp : -cmp;
+      })
+    : [...battingResultsBase].sort((a, b) => {
+        if (a.qualified !== b.qualified) return a.qualified ? -1 : 1;
+        return b.calc.avg - a.calc.avg;
+      });
+  const battingQualifiedCount = battingSortColumn ? 0 : battingResults.filter((r) => r.qualified).length;
+
+  function battingSortHref(col: (typeof BATTING_SORT_COLUMNS)[number]): string {
+    const nextDir =
+      battingSortColumn?.key === col.key ? (battingSortDir === "asc" ? "desc" : "asc") : col.defaultDir;
+    const params = new URLSearchParams();
+    params.set("season", selectedSeason);
+    params.set("sort", col.key);
+    params.set("dir", nextDir);
+    return `/stats?${params.toString()}`;
+  }
 
   const pitchingResults = playerList
     .map((player) => {
@@ -224,21 +278,22 @@ export default async function StatsPage({ searchParams }: PageProps) {
           <table className="w-full min-w-max text-right text-sm tabular-nums">
             <thead className="bg-surface-muted">
               <tr>
-                <th className="px-3 py-2 text-left font-medium text-foreground/50">選手</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">試合</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">打席</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">打数</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">安打</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">本塁打</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">打点</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">盗塁</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">打率</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">出塁率</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">長打率</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">OPS</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">得点圏</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">RC27</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">POINT</th>
+                {BATTING_SORT_COLUMNS.map((col) => (
+                  <th
+                    key={col.key}
+                    className={`px-3 py-2 font-medium text-foreground/50 ${col.key === "name" ? "text-left" : ""}`}
+                  >
+                    <Link
+                      href={battingSortHref(col)}
+                      className="inline-flex items-center gap-0.5 hover:text-foreground"
+                    >
+                      {col.label}
+                      {battingSortColumn?.key === col.key && (
+                        <span className="text-team-red">{battingSortDir === "asc" ? "▲" : "▼"}</span>
+                      )}
+                    </Link>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
