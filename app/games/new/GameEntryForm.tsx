@@ -111,6 +111,10 @@ export default function GameEntryForm({
   const [opponent, setOpponent] = useState("");
   const [inningsTeam, setInningsTeam] = useState<string[]>(Array(7).fill(""));
   const [inningsOpponent, setInningsOpponent] = useState<string[]>(Array(7).fill(""));
+  // 自チームが先攻（表）か後攻（裏）かで、実際の得点経過（表→裏の順）に合わせて
+  // 行の表示順を切り替える。scoreboard自体は team/opponent の名前付き配列のままなので
+  // DB保存側の変更は不要（表示・入力しやすさのためだけの並び替え）。
+  const [teamBatsFirst, setTeamBatsFirst] = useState(true);
   const [batters, setBatters] = useState<BatterState[]>([emptyBatter(1)]);
   const [pitchers, setPitchers] = useState<PitcherState[]>([emptyPitcher(true)]);
 
@@ -216,7 +220,7 @@ export default function GameEntryForm({
 
       {/* スコアボード */}
       <section className="flex flex-col gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <h2 className="text-lg font-semibold">スコアボード</h2>
           <label className="flex items-center gap-1 text-xs text-foreground/60">
             イニング数
@@ -228,6 +232,27 @@ export default function GameEntryForm({
               className={`${smallInputClass} w-14`}
             />
           </label>
+          <div className="flex items-center gap-2 text-xs text-foreground/60">
+            自チーム
+            <label className="flex items-center gap-1">
+              <input
+                type="radio"
+                name="teamBatsFirst"
+                checked={teamBatsFirst}
+                onChange={() => setTeamBatsFirst(true)}
+              />
+              表（先攻）
+            </label>
+            <label className="flex items-center gap-1">
+              <input
+                type="radio"
+                name="teamBatsFirst"
+                checked={!teamBatsFirst}
+                onChange={() => setTeamBatsFirst(false)}
+              />
+              裏（後攻）
+            </label>
+          </div>
         </div>
         <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
           <table className="w-full min-w-max text-center text-sm">
@@ -242,40 +267,45 @@ export default function GameEntryForm({
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t border-border-subtle">
-                <td className="px-2 py-1 text-left font-semibold text-team-red">自チーム</td>
-                {inningsTeam.map((v, i) => (
-                  <td key={i} className="px-1 py-1">
-                    <input
-                      type="number"
-                      value={v}
-                      onChange={(e) => {
-                        const next = [...inningsTeam];
-                        next[i] = e.target.value;
-                        setInningsTeam(next);
-                      }}
-                      className={`${smallInputClass} w-12 text-center`}
-                    />
-                  </td>
-                ))}
-              </tr>
-              <tr className="border-t border-border-subtle">
-                <td className="px-2 py-1 text-left font-semibold">相手</td>
-                {inningsOpponent.map((v, i) => (
-                  <td key={i} className="px-1 py-1">
-                    <input
-                      type="number"
-                      value={v}
-                      onChange={(e) => {
-                        const next = [...inningsOpponent];
-                        next[i] = e.target.value;
-                        setInningsOpponent(next);
-                      }}
-                      className={`${smallInputClass} w-12 text-center`}
-                    />
-                  </td>
-                ))}
-              </tr>
+              {(teamBatsFirst ? ["team", "opponent"] : ["opponent", "team"]).map((side) =>
+                side === "team" ? (
+                  <tr key="team" className="border-t border-border-subtle">
+                    <td className="px-2 py-1 text-left font-semibold text-team-red">自チーム</td>
+                    {inningsTeam.map((v, i) => (
+                      <td key={i} className="px-1 py-1">
+                        <input
+                          type="number"
+                          value={v}
+                          onChange={(e) => {
+                            const next = [...inningsTeam];
+                            next[i] = e.target.value;
+                            setInningsTeam(next);
+                          }}
+                          className={`${smallInputClass} w-12 text-center`}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ) : (
+                  <tr key="opponent" className="border-t border-border-subtle">
+                    <td className="px-2 py-1 text-left font-semibold">相手</td>
+                    {inningsOpponent.map((v, i) => (
+                      <td key={i} className="px-1 py-1">
+                        <input
+                          type="number"
+                          value={v}
+                          onChange={(e) => {
+                            const next = [...inningsOpponent];
+                            next[i] = e.target.value;
+                            setInningsOpponent(next);
+                          }}
+                          className={`${smallInputClass} w-12 text-center`}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                )
+              )}
             </tbody>
           </table>
         </div>
