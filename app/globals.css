@@ -1,26 +1,64 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fafaf9;
+  --foreground: #18181b;
+  --surface: #ffffff;
+  --surface-muted: #f4f4f5;
+  --border-subtle: #e4e4e7;
+
+  /* レールウェイズのチームカラー（クリムゾン×ゴールド）をベースに、
+     現代的なUIでも視認性を保てるトーンへ調整 */
+  --color-team-red: #b91c1c;
+  --color-team-red-bright: #dc143c;
+  --color-team-red-soft: #fef2f2;
+  --color-team-gold: #ca8a04;
+  --color-team-gold-soft: #fef9c3;
+
+  --color-win: #15803d;
+  --color-loss: #b91c1c;
+  --color-draw: #71717a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border-subtle: var(--border-subtle);
+  --color-team-red: var(--color-team-red);
+  --color-team-red-bright: var(--color-team-red-bright);
+  --color-team-red-soft: var(--color-team-red-soft);
+  --color-team-gold: var(--color-team-gold);
+  --color-team-gold-soft: var(--color-team-gold-soft);
+  --color-win: var(--color-win);
+  --color-loss: var(--color-loss);
+  --color-draw: var(--color-draw);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0c0a09;
+    --foreground: #fafafa;
+    --surface: #18181b;
+    --surface-muted: #27272a;
+    --border-subtle: #3f3f46;
+
+    --color-team-red-bright: #f43f5e;
+    --color-team-red-soft: #3f1d1d;
+    --color-team-gold: #eab308;
+    --color-team-gold-soft: #3f3410;
+
+    --color-win: #4ade80;
+    --color-loss: #f87171;
+    --color-draw: #a1a1aa;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }

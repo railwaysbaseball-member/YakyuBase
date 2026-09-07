@@ -33,6 +33,12 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# 実在選手の個人成績を含むデータ投入用SQL（DBには反映済み・使い捨てのため管理外）
+/supabase/seed/
+
+# Claude Codeのローカル権限設定（作業者のローカル一時パスに依存する内容のため管理外）
+/.claude/
+
 # vercel
 .vercel
 
