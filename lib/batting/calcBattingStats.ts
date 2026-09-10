@@ -105,21 +105,19 @@ export function calcBatting(results: PlateResult[]): CalculatedBatting {
     // 打席結果の分類
     const res = pr.result;
 
-    // 四球・死球・犠打・犠飛 → 打数に含めない
+    // 四球・死球・犠打・犠飛・打撃妨害 → 打数に含めない。得点圏打率も通常の打率と
+    // 同じ基準（四球等を除く「打数」を分母にする）なので risp_ab も増やさない。
     if (res.includes("四球")) {
       walks++;
-      if (risp) risp_ab++;
       continue;
     }
     if (res.includes("死球")) {
       hbp++;
-      if (risp) risp_ab++;
       continue;
     }
     // 打撃妨害（"打妨"のように略記される）→ 四球と同じく打数に含めない
     if (res.includes("妨")) {
       interferences++;
-      if (risp) risp_ab++;
       continue;
     }
     // 「犠打」「犠飛」という語そのものだけでなく、「中犠」「左犠」のような
@@ -178,8 +176,11 @@ export function calcBatting(results: PlateResult[]): CalculatedBatting {
     // 振り逃げ・敵失・野選も打数には含まれる（サイトの実データで確認済み）。
     // 打撃妨害は上で打数除外として処理済みのためここでは対象外。
     // POINT計算用に種別だけ別途カウントする（打数・安打の扱いは変えない）。
+    // 野選は実データ上「三野」「投野」「遊野」のように方向+"野"の1文字表記で
+    // 記録されており、"野選"という2文字表記そのものは実データに現れない
+    // （テストで判明: この分岐が一度もマッチせずfielder_choicesが常に0になっていた）。
     if (res.includes("振逃")) strike_escapes++;
-    else if (res.includes("野選")) fielder_choices++;
+    else if (res.includes("野選") || res.endsWith("野")) fielder_choices++;
     else if (res.includes("敵失") || res.endsWith("失")) opponent_errors++;
 
     // その他のアウト → 打数に含める
