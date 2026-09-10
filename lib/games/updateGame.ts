@@ -6,7 +6,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { calcBatting } from "@/lib/batting/calcBattingStats";
-import { nextGameId } from "@/lib/games/generateGameId";
 import {
   buildGameRow,
   buildPitchingRows,
@@ -19,21 +18,14 @@ import {
 } from "@/lib/games/buildGameRows";
 import type { PlateResult } from "@/types/plateResult";
 
-export type {
-  BatterDraft,
-  GameFormPayload,
-  PitcherDraft,
-  PlateResultDraft,
-  PlayerRef,
-} from "@/lib/games/buildGameRows";
+export type UpdateGameState = { error: string } | undefined;
 
-export type CreateGameState = { error: string } | undefined;
-
-export async function createGame(
-  _prevState: CreateGameState,
+export async function updateGame(
+  gameId: string,
+  _prevState: UpdateGameState,
   formData: FormData
-): Promise<CreateGameState> {
-  await requireAdmin("/games/new");
+): Promise<UpdateGameState> {
+  await requireAdmin(`/games/${gameId}/edit`);
 
   let payload: GameFormPayload;
   try {
@@ -47,17 +39,6 @@ export async function createGame(
 
   const supabase = await createClient();
 
-  // --- 試合IDの採番 ---
-  const dateCompact = payload.date.replaceAll("-", "");
-  const { data: existingGames, error: existingGamesError } = await supabase
-    .from("games")
-    .select("id")
-    .like("id", `game-${dateCompact}%`);
-  if (existingGamesError) {
-    return { error: "試合ID採番に失敗しました: " + existingGamesError.message };
-  }
-  const gameId = nextGameId(payload.date, (existingGames ?? []).map((g) => g.id as string));
-
   // --- 新規選手のupsert（batting/pitchingのFK先になるため先に登録） ---
   const newPlayerNames = newPlayerNamesFromPayload(payload);
   if (newPlayerNames.size > 0) {
@@ -70,12 +51,13 @@ export async function createGame(
     }
   }
 
-  const { error: gameError } = await supabase.from("games").insert(buildGameRow(gameId, payload));
+  const { id: _id, ...gameFields } = buildGameRow(gameId, payload);
+  const { error: gameError } = await supabase.from("games").update(gameFields).eq("id", gameId);
   if (gameError) {
-    return { error: "試合の登録に失敗しました: " + gameError.message };
+    return { error: "試合の更新に失敗しました: " + gameError.message };
   }
 
-  // --- 打者成績 ---
+  // --- 打者成績（全置換: 既存行を削除してから作り直す） ---
   const battingRows = payload.batters.map((b) => {
     const plateResults = b.plateResults
       .map(buildPlateResult)
@@ -96,20 +78,37 @@ export async function createGame(
     };
   });
 
+  const { error: battingDeleteError } = await supabase
+    .from("game_batting_stats")
+    .delete()
+    .eq("game_id", gameId);
+  if (battingDeleteError) {
+    return { error: "打撃成績の更新に失敗しました: " + battingDeleteError.message };
+  }
   const { error: battingError } = await supabase.from("game_batting_stats").insert(battingRows);
   if (battingError) {
-    await supabase.from("games").delete().eq("id", gameId);
-    return { error: "打撃成績の登録に失敗しました: " + battingError.message };
+    return {
+      error:
+        "打撃成績の登録に失敗しました（既存データは削除済みです）: " + battingError.message,
+    };
   }
 
-  // --- 投手成績 ---
+  // --- 投手成績（全置換） ---
+  const { error: pitchingDeleteError } = await supabase
+    .from("game_pitching_stats")
+    .delete()
+    .eq("game_id", gameId);
+  if (pitchingDeleteError) {
+    return { error: "投手成績の更新に失敗しました: " + pitchingDeleteError.message };
+  }
   const { error: pitchingError } = await supabase
     .from("game_pitching_stats")
     .insert(buildPitchingRows(gameId, payload));
   if (pitchingError) {
-    await supabase.from("game_batting_stats").delete().eq("game_id", gameId);
-    await supabase.from("games").delete().eq("id", gameId);
-    return { error: "投手成績の登録に失敗しました: " + pitchingError.message };
+    return {
+      error:
+        "投手成績の登録に失敗しました（既存データは削除済みです）: " + pitchingError.message,
+    };
   }
 
   revalidatePath("/games");

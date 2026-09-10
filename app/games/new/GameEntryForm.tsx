@@ -2,13 +2,15 @@
 
 import { useActionState, useState } from "react";
 
-import {
-  createGame,
-  type BatterDraft,
-  type PitcherDraft,
-  type PlateResultDraft,
-  type PlayerRef,
-} from "@/lib/games/createGame";
+import { createGame } from "@/lib/games/createGame";
+import { updateGame } from "@/lib/games/updateGame";
+import type {
+  BatterDraft,
+  PitcherDraft,
+  PlateResultDraft,
+  PlayerRef,
+} from "@/lib/games/buildGameRows";
+import type { GameFormInitialData } from "@/lib/games/gameToFormState";
 import { POSITION_OPTIONS, PLATE_RESULT_OPTIONS } from "@/lib/games/plateResultVocabulary";
 import PlayerPicker from "./PlayerPicker";
 import PlateResultRow from "./PlateResultRow";
@@ -96,27 +98,43 @@ export default function GameEntryForm({
   players,
   opponentOptions,
   stadiumOptions,
+  mode = "create",
+  gameId,
+  initialData,
 }: {
   players: PlayerOption[];
   opponentOptions: string[];
   stadiumOptions: string[];
+  mode?: "create" | "edit";
+  gameId?: string;
+  initialData?: GameFormInitialData;
 }) {
-  const [state, action, pending] = useActionState(createGame, undefined);
+  const boundAction = mode === "edit" ? updateGame.bind(null, gameId!) : createGame;
+  const [state, action, pending] = useActionState(boundAction, undefined);
 
-  const [date, setDate] = useState(todayStr());
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [league, setLeague] = useState("");
-  const [stadium, setStadium] = useState("");
-  const [opponent, setOpponent] = useState("");
-  const [inningsTeam, setInningsTeam] = useState<string[]>(Array(7).fill(""));
-  const [inningsOpponent, setInningsOpponent] = useState<string[]>(Array(7).fill(""));
+  const [date, setDate] = useState(initialData?.date ?? todayStr());
+  const [startTime, setStartTime] = useState(initialData?.startTime ?? "");
+  const [endTime, setEndTime] = useState(initialData?.endTime ?? "");
+  const [league, setLeague] = useState(initialData?.league ?? "");
+  const [stadium, setStadium] = useState(initialData?.stadium ?? "");
+  const [opponent, setOpponent] = useState(initialData?.opponent ?? "");
+  const [inningsTeam, setInningsTeam] = useState<string[]>(
+    initialData?.inningsTeam ?? Array(7).fill("")
+  );
+  const [inningsOpponent, setInningsOpponent] = useState<string[]>(
+    initialData?.inningsOpponent ?? Array(7).fill("")
+  );
   // 自チームが先攻（表）か後攻（裏）かで、実際の得点経過（表→裏の順）に合わせて
   // 行の表示順を切り替える。scoreboard自体は team/opponent の名前付き配列のままなので
-  // DB保存側の変更は不要（表示・入力しやすさのためだけの並び替え）。
+  // DB保存側の変更は不要（表示・入力しやすさのためだけの並び替え）。編集時にどちらが
+  // 表だったかは保存していないため常に表からで表示する（見た目の初期並びだけの話）。
   const [teamBatsFirst, setTeamBatsFirst] = useState(true);
-  const [batters, setBatters] = useState<BatterState[]>([emptyBatter(1)]);
-  const [pitchers, setPitchers] = useState<PitcherState[]>([emptyPitcher(true)]);
+  const [batters, setBatters] = useState<BatterState[]>(
+    initialData ? initialData.batters.map((b) => ({ ...b, key: nextKey() })) : [emptyBatter(1)]
+  );
+  const [pitchers, setPitchers] = useState<PitcherState[]>(
+    initialData ? initialData.pitchers.map((p) => ({ ...p, key: nextKey() })) : [emptyPitcher(true)]
+  );
 
   function setInningCount(n: number) {
     const count = Math.max(1, n);
@@ -494,7 +512,13 @@ export default function GameEntryForm({
       {state?.error && <p className="text-sm text-loss">{state.error}</p>}
 
       <button type="submit" disabled={pending} className={`${primaryButtonClass} w-fit`}>
-        {pending ? "登録中..." : "試合を登録"}
+        {pending
+          ? mode === "edit"
+            ? "保存中..."
+            : "登録中..."
+          : mode === "edit"
+            ? "変更を保存"
+            : "試合を登録"}
       </button>
     </form>
   );

@@ -1,5 +1,9 @@
+import Link from "next/link";
+
 import { supabase } from "@/utils/supabaseClient";
+import { getCurrentPlayer } from "@/lib/auth/session";
 import type { PlateResult } from "@/types/plateResult";
+import DeleteGameButton from "./DeleteGameButton";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -54,6 +58,8 @@ export default async function GameDetailPage({ params }: PageProps) {
     .select("*, players(name)")
     .eq("game_id", gameId);
 
+  const player = await getCurrentPlayer();
+
   if (gameError || battingError || pitchingError || !game || !batting || !pitching) {
     console.error(gameError, battingError, pitchingError);
     return <div className="p-4">データ取得エラーが発生しました</div>;
@@ -95,7 +101,20 @@ export default async function GameDetailPage({ params }: PageProps) {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-10">
       <div className="flex flex-col gap-2">
-        <span className="text-xs font-medium text-foreground/50">{g.date}</span>
+        <div className="flex items-start justify-between gap-3">
+          <span className="text-xs font-medium text-foreground/50">{g.date}</span>
+          {player?.is_admin && (
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/games/${gameId}/edit`}
+                className="rounded-md border border-border-subtle px-3 py-1.5 text-sm font-medium text-foreground/70 hover:bg-surface-muted"
+              >
+                編集
+              </Link>
+              <DeleteGameButton gameId={gameId} />
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-black tracking-tight">vs {g.opponent}</h1>
           <span className={`rounded px-2 py-0.5 text-sm font-bold ${RESULT_CLASS[result]}`}>
