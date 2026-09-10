@@ -64,6 +64,28 @@ type BattingRow = {
   plate_results: PlateResult[] | null;
 };
 
+// game_batting_stats は既にPostgRESTのデフォルト上限（1000件）を超えているため、
+// 無条件の .select() だと後半の行が黙って切り捨てられる（実際に一部選手の打席が
+// 抜け落ち、/stats の集計が実サイトと不一致になる不具合が発生した）。
+// .range() で全件を取り切るまでページングする。
+async function fetchAllBattingRows(): Promise<{ data: BattingRow[] | null; error: { message: string } | null }> {
+  const pageSize = 1000;
+  const all: BattingRow[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from("game_batting_stats")
+      .select("player_id, game_id, plate_results")
+      .range(from, from + pageSize - 1);
+    if (error) return { data: null, error };
+    if (!data || data.length === 0) break;
+    all.push(...(data as BattingRow[]));
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return { data: all, error: null };
+}
+
 export default async function StatsPage({ searchParams }: PageProps) {
   const { season: seasonParam, sort: sortParam, dir: dirParam } = await searchParams;
 
@@ -77,7 +99,7 @@ export default async function StatsPage({ searchParams }: PageProps) {
   ] = await Promise.all([
     supabase.from("players").select("id, name, number"),
     supabase.from("games").select("id, date"),
-    supabase.from("game_batting_stats").select("player_id, game_id, plate_results"),
+    fetchAllBattingRows(),
     supabase.from("game_pitching_stats").select("*"),
     supabase.from("game_fielding_stats").select("*"),
     supabase.from("season_parameters").select("*"),
