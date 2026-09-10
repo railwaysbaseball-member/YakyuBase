@@ -90,6 +90,16 @@ export default function ScheduleForm({
         </label>
       </div>
 
+      <label className="flex flex-col gap-1 text-sm">
+        詳細メモ
+        <textarea
+          name="notes"
+          rows={4}
+          placeholder="持ち物、集合場所の補足、注意事項など"
+          className={inputClass}
+        />
+      </label>
+
       {state?.error && <p className="text-sm text-loss">{state.error}</p>}
 
       <button

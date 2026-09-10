@@ -24,6 +24,7 @@ export async function createSchedule(
   const status = String(formData.get("status") ?? "").trim();
   const deadline = String(formData.get("deadline") ?? "").trim();
   const umpire = String(formData.get("umpire") ?? "").trim();
+  const notes = String(formData.get("notes") ?? "").trim();
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return { error: "日付を正しく入力してください。" };
@@ -61,6 +62,7 @@ export async function createSchedule(
     status: status || null,
     deadline: deadline || null,
     umpire: umpire || null,
+    notes: notes || null,
   });
   if (insertError) {
     return { error: "予定の登録に失敗しました: " + insertError.message };

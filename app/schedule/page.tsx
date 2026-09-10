@@ -143,45 +143,56 @@ function ScheduleSection({
               <div
                 key={s.id}
                 id={s.id}
-                className="flex scroll-mt-20 flex-col gap-2 rounded-xl border border-border-subtle bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
+                className="flex scroll-mt-20 flex-col gap-2 rounded-xl border border-border-subtle bg-surface p-4"
               >
-                <div className="flex items-start gap-4">
-                  <div className="flex w-14 shrink-0 flex-col items-center rounded-lg bg-surface-muted py-1.5">
-                    <span className="text-xs font-medium text-foreground/50">
-                      {weekday}
-                    </span>
-                    <span className="text-base font-bold tabular-nums">{label}</span>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {s.status && (
-                        <span className="rounded bg-team-gold-soft px-1.5 py-0.5 text-xs font-bold text-team-gold">
-                          {s.status}
-                        </span>
-                      )}
-                      <span className="text-sm font-semibold">{s.title}</span>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="flex w-14 shrink-0 flex-col items-center rounded-lg bg-surface-muted py-1.5">
+                      <span className="text-xs font-medium text-foreground/50">
+                        {weekday}
+                      </span>
+                      <span className="text-base font-bold tabular-nums">{label}</span>
                     </div>
-                    <span className="text-xs text-foreground/50">
-                      {s.start_time ? s.start_time.slice(0, 5) : "時刻未定"}
-                      {s.opponent ? ` ・ vs ${s.opponent}` : ""}
-                      {s.place ? ` ・ ${s.place}` : ""}
-                    </span>
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {s.status && (
+                          <span className="rounded bg-team-gold-soft px-1.5 py-0.5 text-xs font-bold text-team-gold">
+                            {s.status}
+                          </span>
+                        )}
+                        <span className="text-sm font-semibold">{s.title}</span>
+                      </div>
+                      <span className="text-xs text-foreground/50">
+                        {s.start_time ? s.start_time.slice(0, 5) : "時刻未定"}
+                        {s.opponent ? ` ・ vs ${s.opponent}` : ""}
+                        {s.place ? ` ・ ${s.place}` : ""}
+                      </span>
+                    </div>
                   </div>
+
+                  {attendance.length > 0 && (
+                    <div className="flex shrink-0 gap-1.5 sm:pl-4">
+                      {(["出席", "欠席", "未定"] as const).map((key) =>
+                        counts[key] > 0 ? (
+                          <span
+                            key={key}
+                            className={`rounded px-1.5 py-0.5 text-xs font-bold ${STATUS_CLASS[key]}`}
+                          >
+                            {key} {counts[key]}
+                          </span>
+                        ) : null
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {attendance.length > 0 && (
-                  <div className="flex shrink-0 gap-1.5 sm:pl-4">
-                    {(["出席", "欠席", "未定"] as const).map((key) =>
-                      counts[key] > 0 ? (
-                        <span
-                          key={key}
-                          className={`rounded px-1.5 py-0.5 text-xs font-bold ${STATUS_CLASS[key]}`}
-                        >
-                          {key} {counts[key]}
-                        </span>
-                      ) : null
-                    )}
-                  </div>
+                {s.notes && (
+                  <details className="text-xs text-foreground/60">
+                    <summary className="cursor-pointer select-none text-foreground/50 hover:text-foreground">
+                      詳細メモ
+                    </summary>
+                    <p className="mt-1 whitespace-pre-wrap rounded-md bg-surface-muted p-2">{s.notes}</p>
+                  </details>
                 )}
               </div>
             );

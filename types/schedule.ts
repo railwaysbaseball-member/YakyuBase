@@ -9,6 +9,7 @@ export type TeamSchedule = {
   status: string | null;
   deadline: string | null;
   umpire: string | null;
+  notes: string | null;
   created_at: string;
 };
 
