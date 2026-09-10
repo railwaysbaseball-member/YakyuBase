@@ -5,6 +5,11 @@ import { createClient as createServerClient } from "@/utils/supabase/server";
 import { fetchAllRows } from "@/utils/supabaseFetchAll";
 import { getCurrentPlayer } from "@/lib/auth/session";
 import type { TeamSchedule, Attendance } from "@/types/schedule";
+import ScheduleCalendar from "./ScheduleCalendar";
+
+type PageProps = {
+  searchParams: Promise<{ month?: string }>;
+};
 
 const STATUS_CLASS: Record<string, string> = {
   出席: "bg-win/10 text-win",
@@ -19,7 +24,9 @@ function formatDate(dateStr: string): { weekday: string; label: string } {
   return { weekday, label };
 }
 
-export default async function SchedulePage() {
+export default async function SchedulePage({ searchParams }: PageProps) {
+  const { month: monthParam } = await searchParams;
+
   const [{ data: scheduleRows, error }, player] = await Promise.all([
     fetchAllRows<TeamSchedule>((from, to) =>
       supabase.from("team_schedule").select("*").order("date", { ascending: true }).range(from, to)
@@ -65,6 +72,8 @@ export default async function SchedulePage() {
   const upcoming = schedules.filter((s) => s.date >= today);
   const past = schedules.filter((s) => s.date < today).reverse();
 
+  const selectedMonth = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : today.slice(0, 7);
+
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-4 py-10">
       <div className="flex items-baseline justify-between">
@@ -78,6 +87,8 @@ export default async function SchedulePage() {
           </Link>
         )}
       </div>
+
+      <ScheduleCalendar schedules={schedules} month={selectedMonth} />
 
       <ScheduleSection
         title="今後の予定"
@@ -131,7 +142,8 @@ function ScheduleSection({
             return (
               <div
                 key={s.id}
-                className="flex flex-col gap-2 rounded-xl border border-border-subtle bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
+                id={s.id}
+                className="flex scroll-mt-20 flex-col gap-2 rounded-xl border border-border-subtle bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex items-start gap-4">
                   <div className="flex w-14 shrink-0 flex-col items-center rounded-lg bg-surface-muted py-1.5">
