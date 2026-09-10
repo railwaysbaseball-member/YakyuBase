@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { supabase } from "@/utils/supabaseClient";
+import { fetchAllRows } from "@/utils/supabaseFetchAll";
 import { getCurrentPlayer } from "@/lib/auth/session";
 
 type GameRow = {
@@ -31,10 +32,13 @@ const RESULT_CLASS: Record<Result, string> = {
 
 export default async function GamesPage() {
   const [{ data: games, error }, player] = await Promise.all([
-    supabase
-      .from("games")
-      .select("id, date, opponent, league, stadium, scoreboard")
-      .order("date", { ascending: false }),
+    fetchAllRows<GameRow>((from, to) =>
+      supabase
+        .from("games")
+        .select("id, date, opponent, league, stadium, scoreboard")
+        .order("date", { ascending: false })
+        .range(from, to)
+    ),
     getCurrentPlayer(),
   ]);
 

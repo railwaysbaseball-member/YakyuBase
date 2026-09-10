@@ -1,5 +1,6 @@
 import { supabase } from "@/utils/supabaseClient";
 import { createClient as createServerClient } from "@/utils/supabase/server";
+import { fetchAllRows } from "@/utils/supabaseFetchAll";
 import type { TeamSchedule, Attendance } from "@/types/schedule";
 
 const STATUS_CLASS: Record<string, string> = {
@@ -16,10 +17,9 @@ function formatDate(dateStr: string): { weekday: string; label: string } {
 }
 
 export default async function SchedulePage() {
-  const { data: scheduleRows, error } = await supabase
-    .from("team_schedule")
-    .select("*")
-    .order("date", { ascending: true });
+  const { data: scheduleRows, error } = await fetchAllRows<TeamSchedule>((from, to) =>
+    supabase.from("team_schedule").select("*").order("date", { ascending: true }).range(from, to)
+  );
 
   if (error) {
     console.error(error);
@@ -33,13 +33,16 @@ export default async function SchedulePage() {
   let attendanceBySchedule = new Map<string, Attendance[]>();
   if (schedules.length > 0) {
     const sessionSupabase = await createServerClient();
-    const { data: attendanceRows } = await sessionSupabase
-      .from("schedule_attendance")
-      .select("*")
-      .in(
-        "schedule_id",
-        schedules.map((s) => s.id)
-      );
+    const { data: attendanceRows } = await fetchAllRows<Attendance>((from, to) =>
+      sessionSupabase
+        .from("schedule_attendance")
+        .select("*")
+        .in(
+          "schedule_id",
+          schedules.map((s) => s.id)
+        )
+        .range(from, to)
+    );
 
     if (attendanceRows) {
       const map = new Map<string, Attendance[]>();

@@ -1,13 +1,21 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { supabase } from "@/utils/supabaseClient";
+import { fetchAllRows } from "@/utils/supabaseFetchAll";
 import GameEntryForm from "./GameEntryForm";
+
+type PlayerOption = { id: string; name: string; number: number | null };
+type GameOption = { opponent: string | null; stadium: string | null };
 
 export default async function NewGamePage() {
   await requireAdmin("/games/new");
 
   const [{ data: players }, { data: games }] = await Promise.all([
-    supabase.from("players").select("id, name, number"),
-    supabase.from("games").select("opponent, stadium"),
+    fetchAllRows<PlayerOption>((from, to) =>
+      supabase.from("players").select("id, name, number").range(from, to)
+    ),
+    fetchAllRows<GameOption>((from, to) =>
+      supabase.from("games").select("opponent, stadium").range(from, to)
+    ),
   ]);
 
   const playerList = (players ?? [])
@@ -19,8 +27,12 @@ export default async function NewGamePage() {
       return a.number - b.number;
     });
 
-  const opponentOptions = [...new Set((games ?? []).map((g) => g.opponent).filter(Boolean))].sort();
-  const stadiumOptions = [...new Set((games ?? []).map((g) => g.stadium).filter(Boolean))].sort();
+  const opponentOptions = [
+    ...new Set((games ?? []).map((g) => g.opponent).filter((v): v is string => Boolean(v))),
+  ].sort();
+  const stadiumOptions = [
+    ...new Set((games ?? []).map((g) => g.stadium).filter((v): v is string => Boolean(v))),
+  ].sort();
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-10">
