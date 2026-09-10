@@ -1,6 +1,9 @@
+import Link from "next/link";
+
 import { supabase } from "@/utils/supabaseClient";
 import { createClient as createServerClient } from "@/utils/supabase/server";
 import { fetchAllRows } from "@/utils/supabaseFetchAll";
+import { getCurrentPlayer } from "@/lib/auth/session";
 import type { TeamSchedule, Attendance } from "@/types/schedule";
 
 const STATUS_CLASS: Record<string, string> = {
@@ -17,9 +20,12 @@ function formatDate(dateStr: string): { weekday: string; label: string } {
 }
 
 export default async function SchedulePage() {
-  const { data: scheduleRows, error } = await fetchAllRows<TeamSchedule>((from, to) =>
-    supabase.from("team_schedule").select("*").order("date", { ascending: true }).range(from, to)
-  );
+  const [{ data: scheduleRows, error }, player] = await Promise.all([
+    fetchAllRows<TeamSchedule>((from, to) =>
+      supabase.from("team_schedule").select("*").order("date", { ascending: true }).range(from, to)
+    ),
+    getCurrentPlayer(),
+  ]);
 
   if (error) {
     console.error(error);
@@ -61,7 +67,17 @@ export default async function SchedulePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-4 py-10">
-      <h1 className="text-xl font-bold">スケジュール</h1>
+      <div className="flex items-baseline justify-between">
+        <h1 className="text-xl font-bold">スケジュール</h1>
+        {player?.is_admin && (
+          <Link
+            href="/schedule/new"
+            className="rounded-md bg-team-red px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-team-red-bright"
+          >
+            ＋予定を追加
+          </Link>
+        )}
+      </div>
 
       <ScheduleSection
         title="今後の予定"
