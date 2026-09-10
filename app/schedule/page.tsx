@@ -141,7 +141,14 @@ function ScheduleSection({
                     <span className="text-base font-bold tabular-nums">{label}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-semibold">{s.title}</span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {s.status && (
+                        <span className="rounded bg-team-gold-soft px-1.5 py-0.5 text-xs font-bold text-team-gold">
+                          {s.status}
+                        </span>
+                      )}
+                      <span className="text-sm font-semibold">{s.title}</span>
+                    </div>
                     <span className="text-xs text-foreground/50">
                       {s.start_time ? s.start_time.slice(0, 5) : "時刻未定"}
                       {s.opponent ? ` ・ vs ${s.opponent}` : ""}

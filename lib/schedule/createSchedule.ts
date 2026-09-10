@@ -28,8 +28,11 @@ export async function createSchedule(
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return { error: "日付を正しく入力してください。" };
   }
+  if (!status) {
+    return { error: "種別を選択してください。" };
+  }
   if (!title) {
-    return { error: "予定名を入力してください。" };
+    return { error: "内容を入力してください。" };
   }
   if (deadline && !/^\d{4}-\d{2}-\d{2}$/.test(deadline)) {
     return { error: "出欠締切日を正しく入力してください。" };
