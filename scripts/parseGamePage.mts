@@ -10,6 +10,7 @@ export type ParsedPlateResult = {
   advancing_hit?: boolean;
   caught_stealing?: boolean;
   picked_off?: boolean;
+  risp?: boolean; // 得点圏にランナーあり（td class='tktnkn' で判定）
 };
 
 export type ParsedBatter = {
@@ -79,11 +80,21 @@ const POSITION_MAP: Record<string, string> = {
 
 // td/th を単純な非ネスト前提で1個ずつ切り出す（<img>/<a>/<span>はネストしても</td>は含まないため安全）
 function splitCells(rowHtml: string, tag: "td" | "th"): string[] {
-  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "g");
-  const cells: string[] = [];
+  return splitCellsWithClass(rowHtml, tag).map((c) => c.html);
+}
+
+// splitCells に加えて開始タグの class 属性も返す版。
+// 打者成績表では td class='tktnkn' が「得点圏にランナーあり」を示す唯一の手がかり
+// （凡例: 「：得点圏にランナーあり」）なので、打席セルの得点圏判定に使う。
+function splitCellsWithClass(rowHtml: string, tag: "td" | "th"): { html: string; className: string }[] {
+  const re = new RegExp(`<${tag}([^>]*)>([\\s\\S]*?)<\\/${tag}>`, "g");
+  const cells: { html: string; className: string }[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(rowHtml))) {
-    cells.push(m[1]);
+    const attrs = m[1];
+    const classMatch = attrs.match(/class=(?:"([^"]*)"|'([^']*)'|([^\s>]+))/);
+    const className = classMatch ? (classMatch[1] ?? classMatch[2] ?? classMatch[3] ?? "") : "";
+    cells.push({ html: m[2], className });
   }
   return cells;
 }
@@ -245,25 +256,27 @@ export function parseGamePage(html: string, gameId: string): ParsedGame | { erro
     for (const rowMatch of bodyRows) {
       const order = Number(rowMatch[1]);
       const rowHtml = rowMatch[2];
-      const tds = splitCells(rowHtml, "td");
+      const tdsWithClass = splitCellsWithClass(rowHtml, "td");
+      const tds = tdsWithClass.map((c) => c.html);
       // tds[0] = 守備位置アイコン群, tds[1] = 選手名, tds[2..2+N-1] = イニング列, 残り6個 = 統計列
       const positionIcons = [...tds[0].matchAll(/box[a-z0-9_]+/g)].map((m) => m[0]);
       const position = positionIcons.map((p) => POSITION_MAP[p] ?? p).join("/");
       const playerName = stripTags(tds[1]);
 
       const inningCellCount = inningLabels.length;
-      const inningCells = tds.slice(2, 2 + inningCellCount);
+      const inningCells = tdsWithClass.slice(2, 2 + inningCellCount);
       const statCells = tds.slice(2 + inningCellCount);
       if (statCells.length !== 6) {
         warnings.push(`[order${order} ${playerName}] 統計列の数が想定外 (${statCells.length})`);
       }
 
       const results: ParsedPlateResult[] = [];
-      inningCells.forEach((cellHtml, i) => {
+      inningCells.forEach(({ html: cellHtml, className }, i) => {
         const text = stripTags(cellHtml);
         if (!text) return;
         const parsed = parseResultCell(cellHtml, warnings, `order${order} ${playerName} inn${inningLabels[i]}`);
-        results.push({ inning: inningLabels[i], ...parsed });
+        const risp = className.split(/\s+/).includes("tktnkn") || undefined;
+        results.push({ inning: inningLabels[i], ...parsed, ...(risp ? { risp } : {}) });
       });
 
       const nums = statCells.map((c) => {

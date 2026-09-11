@@ -45,15 +45,13 @@ function cellToStr(v: number | null): string {
 }
 
 function plateResultToDraft(pr: PlateResult): PlateResultDraft {
-  const runnersOn = pr.runners_on ?? [];
   return {
     inning: String(pr.inning),
     result: pr.result,
     run: !!pr.run,
     rbi: String(pr.rbi ?? 0),
     steal: String(pr.steal ?? 0),
-    risp2: runnersOn.includes(2),
-    risp3: runnersOn.includes(3),
+    risp: !!pr.risp,
     advancingHit: !!pr.advancing_hit,
     caughtStealing: !!pr.caught_stealing,
     pickedOff: !!pr.picked_off,

@@ -101,12 +101,14 @@ describe("calcBatting", () => {
     expect(calc.double_plays).toBe(1);
   });
 
-  it("only counts RISP AB/hits when runners_on includes 2nd or 3rd base", () => {
+  it("only counts RISP AB/hits when the result is flagged risp (td class='tktnkn')", () => {
+    // 取得元サイトは2塁/3塁の区別までは示さず、打席セルに class='tktnkn'
+    // が付くかどうかの単純な真偽値でしか得点圏を判定できない。
     const calc = calcBatting([
-      pr(1, "中安", { runners_on: [1] }), // 1塁のみ -> RISPではない
-      pr(2, "右安", { runners_on: [2] }), // 2塁 -> RISP hit
-      pr(3, "三振", { runners_on: [3] }), // 3塁 -> RISP AB (no hit)
-      pr(4, "四球", { runners_on: [2, 3] }), // 四球はRISP ABに含まれない(AB自体が0)
+      pr(1, "中安"), // risp未設定 -> RISPではない
+      pr(2, "右安", { risp: true }), // RISP hit
+      pr(3, "三振", { risp: true }), // RISP AB (no hit)
+      pr(4, "四球", { risp: true }), // 四球はRISP ABに含まれない(AB自体が0)
     ]);
     expect(calc.risp_ab).toBe(2);
     expect(calc.risp_hits).toBe(1);

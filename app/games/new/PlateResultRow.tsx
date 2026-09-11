@@ -71,18 +71,10 @@ export default function PlateResultRow({
       <label className="flex items-center gap-1 text-xs">
         <input
           type="checkbox"
-          checked={value.risp2}
-          onChange={(e) => onChange({ ...value, risp2: e.target.checked })}
+          checked={value.risp}
+          onChange={(e) => onChange({ ...value, risp: e.target.checked })}
         />
-        走者2塁
-      </label>
-      <label className="flex items-center gap-1 text-xs">
-        <input
-          type="checkbox"
-          checked={value.risp3}
-          onChange={(e) => onChange({ ...value, risp3: e.target.checked })}
-        />
-        走者3塁
+        得点圏
       </label>
 
       <details className="text-xs">

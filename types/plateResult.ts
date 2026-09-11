@@ -18,7 +18,7 @@ export type PlateResult = {
   direction?: string;            // 打球方向（遊・中・左・右・一・二・三・投など）
   contact_type?: "ゴロ" | "フライ" | "ライナー" | "不明"; // 打球種類
 
-  runners_on?: number[];         // 走者状況（例：[1,2]）
+  risp?: boolean;                // 得点圏（2塁または3塁）にランナーあり
   advancing_hit?: boolean;       // 進塁打
   winning_rbi?: boolean;         // 勝利打点
 

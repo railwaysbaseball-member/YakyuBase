@@ -12,8 +12,7 @@ export type PlateResultDraft = {
   run: boolean;
   rbi: string;
   steal: string;
-  risp2: boolean;
-  risp3: boolean;
+  risp: boolean;
   advancingHit: boolean;
   caughtStealing: boolean;
   pickedOff: boolean;
@@ -88,10 +87,6 @@ export function buildPlateResult(d: PlateResultDraft): PlateResult | null {
   const result = d.result.trim();
   if (!Number.isInteger(inning) || inning <= 0 || !result) return null;
 
-  const runnersOn: number[] = [];
-  if (d.risp2) runnersOn.push(2);
-  if (d.risp3) runnersOn.push(3);
-
   const rbi = Number(d.rbi) || 0;
   const steal = Number(d.steal) || 0;
 
@@ -101,7 +96,7 @@ export function buildPlateResult(d: PlateResultDraft): PlateResult | null {
     ...(d.run ? { run: true } : {}),
     ...(rbi > 0 ? { rbi } : {}),
     ...(steal > 0 ? { steal } : {}),
-    ...(runnersOn.length > 0 ? { runners_on: runnersOn } : {}),
+    ...(d.risp ? { risp: true } : {}),
     ...(d.advancingHit ? { advancing_hit: true } : {}),
     ...(d.caughtStealing ? { caught_stealing: true } : {}),
     ...(d.pickedOff ? { picked_off: true } : {}),

@@ -98,9 +98,10 @@ export function calcBatting(results: PlateResult[]): CalculatedBatting {
 
     pa++;
 
-    // 得点圏判定（2塁 or 3塁に走者）
-    const runnersOn = pr.runners_on ?? [];
-    const risp = runnersOn.includes(2) || runnersOn.includes(3);
+    // 得点圏判定。取得元サイトは「2塁か3塁か」までは区別しておらず、打席結果セルに
+    // class='tktnkn' が付くかどうか（凡例:「：得点圏にランナーあり」）でしか
+    // 判定できないため、risp は単純な真偽値。
+    const risp = !!pr.risp;
 
     // 打席結果の分類
     const res = pr.result;

@@ -31,8 +31,7 @@ function plateResult(overrides: Partial<PlateResultDraft> = {}): PlateResultDraf
     run: false,
     rbi: "0",
     steal: "0",
-    risp2: false,
-    risp3: false,
+    risp: false,
     advancingHit: false,
     caughtStealing: false,
     pickedOff: false,
@@ -135,12 +134,12 @@ describe("buildPlateResult", () => {
     expect(pr).not.toHaveProperty("run");
     expect(pr).not.toHaveProperty("rbi");
     expect(pr).not.toHaveProperty("steal");
-    expect(pr).not.toHaveProperty("runners_on");
+    expect(pr).not.toHaveProperty("risp");
   });
 
   it("includes only the flags that are actually set", () => {
     const pr = buildPlateResult(
-      plateResult({ run: true, rbi: "2", steal: "1", risp2: true, doublePlay: true })
+      plateResult({ run: true, rbi: "2", steal: "1", risp: true, doublePlay: true })
     );
     expect(pr).toEqual({
       inning: 1,
@@ -148,14 +147,9 @@ describe("buildPlateResult", () => {
       run: true,
       rbi: 2,
       steal: 1,
-      runners_on: [2],
+      risp: true,
       double_play: true,
     });
-  });
-
-  it("includes both runners_on entries when risp2 and risp3 are both set", () => {
-    const pr = buildPlateResult(plateResult({ risp2: true, risp3: true }));
-    expect(pr?.runners_on).toEqual([2, 3]);
   });
 });
 
