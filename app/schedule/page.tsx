@@ -6,6 +6,7 @@ import { fetchAllRows } from "@/utils/supabaseFetchAll";
 import { getCurrentPlayer } from "@/lib/auth/session";
 import type { TeamSchedule, Attendance } from "@/types/schedule";
 import ScheduleCalendar from "./ScheduleCalendar";
+import AttendanceForm from "./AttendanceForm";
 
 type PageProps = {
   searchParams: Promise<{ month?: string }>;
@@ -109,6 +110,7 @@ export default async function SchedulePage({ searchParams }: PageProps) {
         items={upcoming}
         attendanceBySchedule={attendanceBySchedule}
         nonGuestPlayers={loggedIn ? nonGuestPlayers : null}
+        currentPlayerId={player?.id ?? null}
         emptyMessage="今のところ予定はありません"
       />
 
@@ -118,6 +120,7 @@ export default async function SchedulePage({ searchParams }: PageProps) {
           items={past}
           attendanceBySchedule={attendanceBySchedule}
           nonGuestPlayers={loggedIn ? nonGuestPlayers : null}
+          currentPlayerId={player?.id ?? null}
           emptyMessage=""
           muted
         />
@@ -131,6 +134,7 @@ function ScheduleSection({
   items,
   attendanceBySchedule,
   nonGuestPlayers,
+  currentPlayerId,
   emptyMessage,
   muted,
 }: {
@@ -138,6 +142,7 @@ function ScheduleSection({
   items: TeamSchedule[];
   attendanceBySchedule: Map<string, Attendance[]>;
   nonGuestPlayers: { id: string; name: string }[] | null;
+  currentPlayerId: string | null;
   emptyMessage: string;
   muted?: boolean;
 }) {
@@ -159,6 +164,8 @@ function ScheduleSection({
 
             const respondedIds = new Set(attendance.map((a) => a.player_id));
             const notResponded = nonGuestPlayers?.filter((p) => !respondedIds.has(p.id)) ?? [];
+            const myAttendance =
+              attendance.find((a) => a.player_id === currentPlayerId)?.attendance ?? null;
 
             return (
               <div
@@ -216,6 +223,8 @@ function ScheduleSection({
                     </div>
                   )}
                 </div>
+
+                {currentPlayerId && <AttendanceForm scheduleId={s.id} current={myAttendance} />}
 
                 {s.notes && (
                   <details className="text-xs text-foreground/60">
