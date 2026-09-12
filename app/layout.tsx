@@ -25,6 +25,7 @@ const NAV_LINKS = [
   { href: "/games", label: "試合結果" },
   { href: "/stats", label: "個人成績" },
   { href: "/schedule", label: "スケジュール" },
+  { href: "/tools", label: "道具管理" },
 ];
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
