@@ -32,7 +32,7 @@ export default async function PlayersPage() {
         {sorted.map((p) => (
           <div
             key={p.id}
-            className="flex items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface px-4 py-3"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface px-4 py-3"
           >
             <span className="text-sm font-medium">
               {p.number != null ? `${p.number} ` : ""}

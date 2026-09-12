@@ -76,7 +76,7 @@ export default async function SchedulePage({ searchParams }: PageProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-4 py-10">
-      <div className="flex items-baseline justify-between">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="text-xl font-bold">スケジュール</h1>
         {player?.is_admin && (
           <Link

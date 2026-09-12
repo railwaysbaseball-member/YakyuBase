@@ -18,7 +18,7 @@ export default async function AuthNav() {
   }
 
   return (
-    <div className="flex shrink-0 items-center gap-3 text-sm">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
       <span className="flex items-center gap-1.5">
         <span className="font-medium">{player.name}</span>
         {player.is_admin && (

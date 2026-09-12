@@ -101,7 +101,7 @@ export default async function GameDetailPage({ params }: PageProps) {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-10">
       <div className="flex flex-col gap-2">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <span className="text-xs font-medium text-foreground/50">{g.date}</span>
           {player?.is_admin && (
             <div className="flex items-center gap-2">

@@ -59,9 +59,9 @@ export default async function GamesPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-10">
-      <div className="flex items-baseline justify-between">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="text-xl font-bold">試合結果</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {rows.length > 0 && (
             <span className="text-sm text-foreground/50">
               {rows.length}試合 {record.win}勝{record.loss}敗

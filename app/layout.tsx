@@ -36,7 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <div className="h-1 bg-gradient-to-r from-team-red via-team-red-bright to-team-gold" />
         <header className="sticky top-0 z-10 border-b border-border-subtle bg-surface/90 backdrop-blur">
-          <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-4 py-3">
+          <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3">
             <Link href="/" className="flex items-center gap-2 shrink-0">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-team-red text-sm font-black text-white">
                 R
