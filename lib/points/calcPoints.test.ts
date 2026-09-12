@@ -60,6 +60,7 @@ function batting(overrides: Partial<CalculatedBatting> = {}): CalculatedBatting 
     doubles: 0,
     triples: 0,
     homeruns: 0,
+    total_bases: 0,
     runs: 0,
     rbi: 0,
     steals: 0,

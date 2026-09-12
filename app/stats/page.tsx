@@ -35,10 +35,23 @@ const BATTING_SORT_COLUMNS: {
   { key: "games", label: "試合", defaultDir: "desc", getValue: (r) => r.games },
   { key: "pa", label: "打席", defaultDir: "desc", getValue: (r) => r.calc.pa },
   { key: "ab", label: "打数", defaultDir: "desc", getValue: (r) => r.calc.ab },
+  { key: "runs", label: "得点", defaultDir: "desc", getValue: (r) => r.calc.runs },
   { key: "hits", label: "安打", defaultDir: "desc", getValue: (r) => r.calc.hits },
+  { key: "doubles", label: "二塁打", defaultDir: "desc", getValue: (r) => r.calc.doubles },
+  { key: "triples", label: "三塁打", defaultDir: "desc", getValue: (r) => r.calc.triples },
   { key: "hr", label: "本塁打", defaultDir: "desc", getValue: (r) => r.calc.homeruns },
+  { key: "total_bases", label: "塁打数", defaultDir: "desc", getValue: (r) => r.calc.total_bases },
   { key: "rbi", label: "打点", defaultDir: "desc", getValue: (r) => r.calc.rbi },
   { key: "steals", label: "盗塁", defaultDir: "desc", getValue: (r) => r.calc.steals },
+  { key: "caught_stealing", label: "盗塁死", defaultDir: "desc", getValue: (r) => r.calc.caught_stealing },
+  { key: "picked_off", label: "牽制死", defaultDir: "desc", getValue: (r) => r.calc.picked_off },
+  { key: "strikeouts", label: "三振", defaultDir: "desc", getValue: (r) => r.calc.strikeouts },
+  { key: "walks", label: "四球", defaultDir: "desc", getValue: (r) => r.calc.walks },
+  { key: "hbp", label: "死球", defaultDir: "desc", getValue: (r) => r.calc.hbp },
+  { key: "sac_bunt", label: "犠打", defaultDir: "desc", getValue: (r) => r.calc.sac_bunt },
+  { key: "sac_fly", label: "犠飛", defaultDir: "desc", getValue: (r) => r.calc.sac_fly },
+  { key: "advancing_hits", label: "進塁打", defaultDir: "desc", getValue: (r) => r.calc.advancing_hits },
+  { key: "double_plays", label: "併殺打", defaultDir: "desc", getValue: (r) => r.calc.double_plays },
   { key: "avg", label: "打率", defaultDir: "desc", getValue: (r) => r.calc.avg },
   { key: "obp", label: "出塁率", defaultDir: "desc", getValue: (r) => r.calc.obp },
   { key: "slg", label: "長打率", defaultDir: "desc", getValue: (r) => r.calc.slg },
@@ -47,6 +60,8 @@ const BATTING_SORT_COLUMNS: {
   { key: "rc27", label: "RC27", defaultDir: "desc", getValue: (r) => r.calc.rc27 },
   { key: "point", label: "POINT", defaultDir: "desc", getValue: (r) => r.point ?? -Infinity },
 ];
+
+const BATTING_COLUMN_COUNT = BATTING_SORT_COLUMNS.length;
 
 type PlayerRow = {
   id: string;
@@ -314,7 +329,10 @@ export default async function StatsPage({ searchParams }: PageProps) {
                 <Fragment key={player.id}>
                   {i === battingQualifiedCount && battingQualifiedCount > 0 && (
                     <tr key="divider">
-                      <td colSpan={15} className="border-t border-border-subtle bg-surface-muted px-3 py-1 text-left text-xs text-foreground/50">
+                      <td
+                        colSpan={BATTING_COLUMN_COUNT}
+                        className="border-t border-border-subtle bg-surface-muted px-3 py-1 text-left text-xs text-foreground/50"
+                      >
                         規定打席未満
                       </td>
                     </tr>
@@ -324,10 +342,23 @@ export default async function StatsPage({ searchParams }: PageProps) {
                     <td className="px-3 py-2">{gamesPlayed}</td>
                     <td className="px-3 py-2">{calc.pa}</td>
                     <td className="px-3 py-2">{calc.ab}</td>
+                    <td className="px-3 py-2">{calc.runs}</td>
                     <td className="px-3 py-2">{calc.hits}</td>
+                    <td className="px-3 py-2">{calc.doubles}</td>
+                    <td className="px-3 py-2">{calc.triples}</td>
                     <td className="px-3 py-2">{calc.homeruns}</td>
+                    <td className="px-3 py-2">{calc.total_bases}</td>
                     <td className="px-3 py-2">{calc.rbi}</td>
                     <td className="px-3 py-2">{calc.steals}</td>
+                    <td className="px-3 py-2">{calc.caught_stealing}</td>
+                    <td className="px-3 py-2">{calc.picked_off}</td>
+                    <td className="px-3 py-2">{calc.strikeouts}</td>
+                    <td className="px-3 py-2">{calc.walks}</td>
+                    <td className="px-3 py-2">{calc.hbp}</td>
+                    <td className="px-3 py-2">{calc.sac_bunt}</td>
+                    <td className="px-3 py-2">{calc.sac_fly}</td>
+                    <td className="px-3 py-2">{calc.advancing_hits}</td>
+                    <td className="px-3 py-2">{calc.double_plays}</td>
                     <td className="px-3 py-2">{formatAvg(calc.avg)}</td>
                     <td className="px-3 py-2">{formatAvg(calc.obp)}</td>
                     <td className="px-3 py-2">{formatAvg(calc.slg)}</td>
@@ -340,7 +371,7 @@ export default async function StatsPage({ searchParams }: PageProps) {
               ))}
               {battingResults.length === 0 && (
                 <tr>
-                  <td colSpan={15} className="px-3 py-6 text-center text-foreground/50">
+                  <td colSpan={BATTING_COLUMN_COUNT} className="px-3 py-6 text-center text-foreground/50">
                     データがありません
                   </td>
                 </tr>

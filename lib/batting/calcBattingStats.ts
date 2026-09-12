@@ -9,6 +9,7 @@ export type CalculatedBatting = {
   doubles: number;
   triples: number;
   homeruns: number;
+  total_bases: number; // 塁打数
 
   runs: number;        // 得点
   rbi: number;         // 打点
@@ -223,6 +224,7 @@ export function calcBatting(results: PlateResult[]): CalculatedBatting {
     doubles,
     triples,
     homeruns,
+    total_bases: totalBases,
     runs,
     rbi,
     steals,
