@@ -52,6 +52,7 @@ type PlayerRow = {
   id: string;
   name: string;
   number: number | null;
+  is_guest: boolean;
 };
 
 type GameRow = {
@@ -77,7 +78,7 @@ export default async function StatsPage({ searchParams }: PageProps) {
     { data: seasonParamsRows, error: seasonParamsError },
   ] = await Promise.all([
     fetchAllRows<PlayerRow>((from, to) =>
-      supabase.from("players").select("id, name, number").range(from, to)
+      supabase.from("players").select("id, name, number, is_guest").range(from, to)
     ),
     fetchAllRows<GameRow>((from, to) => supabase.from("games").select("id, date").range(from, to)),
     fetchAllRows<BattingRow>((from, to) =>
@@ -162,12 +163,15 @@ export default async function StatsPage({ searchParams }: PageProps) {
     fieldingByPlayer.set(row.player_id, list);
   }
 
-  const playerList = ((players ?? []) as PlayerRow[]).slice().sort((a, b) => {
-    if (a.number == null && b.number == null) return a.name.localeCompare(b.name);
-    if (a.number == null) return 1;
-    if (b.number == null) return -1;
-    return a.number - b.number;
-  });
+  // 助っ人（自チーム所属ではない選手）は個人成績には表示しない。
+  const playerList = ((players ?? []) as PlayerRow[])
+    .filter((p) => !p.is_guest)
+    .sort((a, b) => {
+      if (a.number == null && b.number == null) return a.name.localeCompare(b.name);
+      if (a.number == null) return 1;
+      if (b.number == null) return -1;
+      return a.number - b.number;
+    });
 
   const battingResultsBase: BattingResultRow[] = playerList
     .map((player) => {

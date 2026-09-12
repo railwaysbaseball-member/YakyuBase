@@ -27,6 +27,11 @@ export default async function AuthNav() {
           </span>
         )}
       </span>
+      {player.is_admin && (
+        <Link href="/players" className="font-medium text-foreground/60 transition-colors hover:text-foreground">
+          選手管理
+        </Link>
+      )}
       <form action={signOut}>
         <button
           type="submit"
