@@ -27,9 +27,12 @@ function formatDate(dateStr: string): { weekday: string; label: string } {
 export default async function SchedulePage({ searchParams }: PageProps) {
   const { month: monthParam } = await searchParams;
 
-  const [{ data: scheduleRows, error }, player] = await Promise.all([
+  const [{ data: scheduleRows, error }, { data: playerRows }, player] = await Promise.all([
     fetchAllRows<TeamSchedule>((from, to) =>
       supabase.from("team_schedule").select("*").order("date", { ascending: true }).range(from, to)
+    ),
+    fetchAllRows<{ id: string; name: string; is_guest: boolean }>((from, to) =>
+      supabase.from("players").select("id, name, is_guest").range(from, to)
     ),
     getCurrentPlayer(),
   ]);
@@ -40,6 +43,8 @@ export default async function SchedulePage({ searchParams }: PageProps) {
   }
 
   const schedules = (scheduleRows ?? []) as TeamSchedule[];
+  // 助っ人は自チームの出欠管理対象ではないため「未回答」判定から除外する。
+  const nonGuestPlayers = (playerRows ?? []).filter((p) => !p.is_guest);
 
   // 出欠明細はログインユーザーのみ閲覧可（RLS）。未ログインでは取得できず
   // エラーになるので、その場合は出欠集計なしで表示する。
@@ -73,18 +78,27 @@ export default async function SchedulePage({ searchParams }: PageProps) {
   const past = schedules.filter((s) => s.date < today).reverse();
 
   const selectedMonth = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : today.slice(0, 7);
+  const loggedIn = !!player;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-4 py-10">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="text-xl font-bold">スケジュール</h1>
         {player?.is_admin && (
-          <Link
-            href="/schedule/new"
-            className="rounded-md bg-team-red px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-team-red-bright"
-          >
-            ＋予定を追加
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/schedule/rate"
+              className="text-sm text-foreground/50 underline hover:text-foreground"
+            >
+              年度別参加率
+            </Link>
+            <Link
+              href="/schedule/new"
+              className="rounded-md bg-team-red px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-team-red-bright"
+            >
+              ＋予定を追加
+            </Link>
+          </div>
         )}
       </div>
 
@@ -94,6 +108,7 @@ export default async function SchedulePage({ searchParams }: PageProps) {
         title="今後の予定"
         items={upcoming}
         attendanceBySchedule={attendanceBySchedule}
+        nonGuestPlayers={loggedIn ? nonGuestPlayers : null}
         emptyMessage="今のところ予定はありません"
       />
 
@@ -102,6 +117,7 @@ export default async function SchedulePage({ searchParams }: PageProps) {
           title="過去の予定"
           items={past}
           attendanceBySchedule={attendanceBySchedule}
+          nonGuestPlayers={loggedIn ? nonGuestPlayers : null}
           emptyMessage=""
           muted
         />
@@ -114,12 +130,14 @@ function ScheduleSection({
   title,
   items,
   attendanceBySchedule,
+  nonGuestPlayers,
   emptyMessage,
   muted,
 }: {
   title: string;
   items: TeamSchedule[];
   attendanceBySchedule: Map<string, Attendance[]>;
+  nonGuestPlayers: { id: string; name: string }[] | null;
   emptyMessage: string;
   muted?: boolean;
 }) {
@@ -138,6 +156,9 @@ function ScheduleSection({
             const attendance = attendanceBySchedule.get(s.id) ?? [];
             const counts = { 出席: 0, 欠席: 0, 未定: 0 };
             for (const a of attendance) counts[a.attendance]++;
+
+            const respondedIds = new Set(attendance.map((a) => a.player_id));
+            const notResponded = nonGuestPlayers?.filter((p) => !respondedIds.has(p.id)) ?? [];
 
             return (
               <div
@@ -170,8 +191,8 @@ function ScheduleSection({
                     </div>
                   </div>
 
-                  {attendance.length > 0 && (
-                    <div className="flex shrink-0 gap-1.5 sm:pl-4">
+                  {(attendance.length > 0 || notResponded.length > 0) && (
+                    <div className="flex shrink-0 flex-wrap items-center gap-1.5 sm:pl-4">
                       {(["出席", "欠席", "未定"] as const).map((key) =>
                         counts[key] > 0 ? (
                           <span
@@ -181,6 +202,16 @@ function ScheduleSection({
                             {key} {counts[key]}
                           </span>
                         ) : null
+                      )}
+                      {notResponded.length > 0 && (
+                        <details className="text-xs">
+                          <summary className="inline-block cursor-pointer select-none rounded bg-surface-muted px-1.5 py-0.5 font-bold text-foreground/50 hover:text-foreground">
+                            未回答 {notResponded.length}
+                          </summary>
+                          <p className="mt-1 max-w-40 text-foreground/50">
+                            {notResponded.map((p) => p.name).join("、")}
+                          </p>
+                        </details>
                       )}
                     </div>
                   )}
