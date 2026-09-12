@@ -45,6 +45,32 @@ export type PitcherDraft = {
   decision: "" | "W" | "L" | "S" | "H";
 };
 
+export type SupportRole =
+  | "participate"
+  | "manage"
+  | "bench"
+  | "score"
+  | "umpire"
+  | "camera"
+  | "watch"
+  | "cheer";
+
+export const SUPPORT_ROLES: { key: SupportRole; label: string }[] = [
+  { key: "participate", label: "参加" },
+  { key: "manage", label: "采配" },
+  { key: "bench", label: "控え" },
+  { key: "score", label: "スコア" },
+  { key: "umpire", label: "審判" },
+  { key: "camera", label: "撮影" },
+  { key: "watch", label: "見学" },
+  { key: "cheer", label: "応援" },
+];
+
+export type SupportDraft = {
+  player: PlayerRef;
+  roles: Record<SupportRole, boolean>;
+};
+
 export type GameFormPayload = {
   date: string;
   startTime: string;
@@ -56,6 +82,7 @@ export type GameFormPayload = {
   inningsOpponent: string[];
   batters: BatterDraft[];
   pitchers: PitcherDraft[];
+  support: SupportDraft[];
 };
 
 export function resolvePlayerId(ref: PlayerRef): string | null {
@@ -155,6 +182,13 @@ export function validateGamePayload(payload: GameFormPayload): string | null {
     return "先発投手をちょうど1人指定してください。";
   }
 
+  const resolvedSupportIds = payload.support
+    .map((s) => resolvePlayerId(s.player))
+    .filter((id): id is string => id !== null);
+  if (new Set(resolvedSupportIds).size !== resolvedSupportIds.length) {
+    return "同じ選手がサポートに複数回登録されています。";
+  }
+
   return null;
 }
 
@@ -165,6 +199,9 @@ export function newPlayerNamesFromPayload(payload: GameFormPayload): Set<string>
   }
   for (const p of payload.pitchers) {
     if (p.player.mode === "new") names.add(p.player.newName.trim());
+  }
+  for (const s of payload.support) {
+    if (s.player.mode === "new") names.add(s.player.newName.trim());
   }
   return names;
 }
@@ -194,6 +231,38 @@ export function buildGameRow(gameId: string, payload: GameFormPayload) {
     opponent: payload.opponent.trim(),
     scoreboard,
   };
+}
+
+/**
+ * 選手が未選択、または役割が1つも選ばれていない行はサポート実績として
+ * 意味を持たないので、insert対象から静かに除外する（打者/投手と違い
+ * サポートは完全に任意項目のため、空行を残しておきたいUI都合上バリデー
+ * ションエラーにはしない）。
+ */
+export function buildSupportRows(gameId: string, payload: GameFormPayload) {
+  return payload.support
+    .map((s) => {
+      const playerId = resolvePlayerId(s.player);
+      if (!playerId) return null;
+      const hasAnyRole = SUPPORT_ROLES.some(({ key }) => s.roles[key]);
+      if (!hasAnyRole) return null;
+
+      const row: { game_id: string; player_id: string } & Record<SupportRole, number> = {
+        game_id: gameId,
+        player_id: playerId,
+        participate: 0,
+        manage: 0,
+        bench: 0,
+        score: 0,
+        umpire: 0,
+        camera: 0,
+        watch: 0,
+        cheer: 0,
+      };
+      for (const { key } of SUPPORT_ROLES) row[key] = s.roles[key] ? 1 : 0;
+      return row;
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null);
 }
 
 export function buildPitchingRows(gameId: string, payload: GameFormPayload) {

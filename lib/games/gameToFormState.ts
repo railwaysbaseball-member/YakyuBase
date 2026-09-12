@@ -1,5 +1,13 @@
 import type { PlateResult } from "@/types/plateResult";
-import type { BatterDraft, GameFormPayload, PitcherDraft, PlateResultDraft } from "@/lib/games/buildGameRows";
+import {
+  SUPPORT_ROLES,
+  type BatterDraft,
+  type GameFormPayload,
+  type PitcherDraft,
+  type PlateResultDraft,
+  type SupportDraft,
+  type SupportRole,
+} from "@/lib/games/buildGameRows";
 
 type GameRow = {
   date: string;
@@ -38,6 +46,10 @@ type PitchingStatsRow = {
   is_starter: boolean;
 };
 
+type SupportStatsRow = {
+  player_id: string;
+} & Record<SupportRole, number>;
+
 export type GameFormInitialData = Omit<GameFormPayload, never>;
 
 function cellToStr(v: number | null): string {
@@ -69,7 +81,8 @@ function splitInnings(innings: number | null): { inningsWhole: string; inningsOu
 export function gameToFormState(
   game: GameRow,
   battingRows: BattingStatsRow[],
-  pitchingRows: PitchingStatsRow[]
+  pitchingRows: PitchingStatsRow[],
+  supportRows: SupportStatsRow[] = []
 ): GameFormInitialData {
   const batters: BatterDraft[] = [...battingRows]
     .sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0))
@@ -98,6 +111,15 @@ export function gameToFormState(
     decision: (p.decision ?? "") as PitcherDraft["decision"],
   }));
 
+  const support: SupportDraft[] = supportRows.map((s) => {
+    const roles = {} as Record<SupportRole, boolean>;
+    for (const { key } of SUPPORT_ROLES) roles[key] = !!s[key];
+    return {
+      player: { mode: "existing", playerId: s.player_id, newName: "" },
+      roles,
+    };
+  });
+
   return {
     date: game.date,
     startTime: game.start_time ? game.start_time.slice(0, 5) : "",
@@ -109,5 +131,6 @@ export function gameToFormState(
     inningsOpponent: game.scoreboard.innings.opponent.map(cellToStr),
     batters,
     pitchers,
+    support,
   };
 }

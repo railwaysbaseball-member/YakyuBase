@@ -8,6 +8,7 @@ import { calcPitching, formatInnings } from "@/lib/pitching/calcPitchingStats";
 import { calcFielding } from "@/lib/fielding/calcFieldingStats";
 import { calcBatterPoint, calcPitcherPoint } from "@/lib/points/calcPoints";
 import { formatAvg, formatRate } from "@/lib/format";
+import { SUPPORT_ROLES, type SupportRole } from "@/lib/games/buildGameRows";
 import type { PlateResult } from "@/types/plateResult";
 import type { PitchingStats } from "@/types/pitching";
 import type { FieldingStats } from "@/types/fielding";
@@ -81,6 +82,11 @@ type BattingRow = {
   plate_results: PlateResult[] | null;
 };
 
+type SupportRow = {
+  player_id: string;
+  game_id: string;
+} & Record<SupportRole, number>;
+
 export default async function StatsPage({ searchParams }: PageProps) {
   const { season: seasonParam, sort: sortParam, dir: dirParam } = await searchParams;
 
@@ -90,6 +96,7 @@ export default async function StatsPage({ searchParams }: PageProps) {
     { data: battingRows, error: battingError },
     { data: pitchingRows, error: pitchingError },
     { data: fieldingRows, error: fieldingError },
+    { data: supportRows, error: supportError },
     { data: seasonParamsRows, error: seasonParamsError },
   ] = await Promise.all([
     fetchAllRows<PlayerRow>((from, to) =>
@@ -105,6 +112,12 @@ export default async function StatsPage({ searchParams }: PageProps) {
     fetchAllRows<FieldingStats>((from, to) =>
       supabase.from("game_fielding_stats").select("*").range(from, to)
     ),
+    fetchAllRows<SupportRow>((from, to) =>
+      supabase
+        .from("support_stats")
+        .select("player_id, game_id, participate, manage, bench, score, umpire, camera, watch, cheer")
+        .range(from, to)
+    ),
     supabase.from("season_parameters").select("*"),
   ]);
 
@@ -118,6 +131,9 @@ export default async function StatsPage({ searchParams }: PageProps) {
   // 表示したいので、失敗してもページ全体は落とさず空データとして扱う。
   if (fieldingError) {
     console.error("game_fielding_stats fetch failed (0001マイグレーション未適用の可能性):", fieldingError);
+  }
+  if (supportError) {
+    console.error("support_stats fetch failed:", supportError);
   }
 
   // season_parameters（POINT計算・規定打席/投球回の重み付け）が未投入でもページは
@@ -176,6 +192,14 @@ export default async function StatsPage({ searchParams }: PageProps) {
     const list = fieldingByPlayer.get(row.player_id) ?? [];
     list.push(row);
     fieldingByPlayer.set(row.player_id, list);
+  }
+
+  const supportByPlayer = new Map<string, SupportRow[]>();
+  for (const row of (supportRows ?? []) as SupportRow[]) {
+    if (!inScope(row.game_id)) continue;
+    const list = supportByPlayer.get(row.player_id) ?? [];
+    list.push(row);
+    supportByPlayer.set(row.player_id, list);
   }
 
   // 助っ人（自チーム所属ではない選手）は個人成績には表示しない。
@@ -263,6 +287,25 @@ export default async function StatsPage({ searchParams }: PageProps) {
     })
     .filter((v): v is NonNullable<typeof v> => v !== null)
     .sort((a, b) => b.calc.chances - a.calc.chances);
+
+  const supportResults = playerList
+    .map((player) => {
+      const rows = supportByPlayer.get(player.id) ?? [];
+      if (rows.length === 0) return null;
+
+      const totals = {} as Record<SupportRole, number>;
+      let grandTotal = 0;
+      for (const { key } of SUPPORT_ROLES) {
+        const sum = rows.reduce((acc, row) => acc + (row[key] ?? 0), 0);
+        totals[key] = sum;
+        grandTotal += sum;
+      }
+      if (grandTotal === 0) return null;
+
+      return { player, totals, grandTotal };
+    })
+    .filter((v): v is NonNullable<typeof v> => v !== null)
+    .sort((a, b) => b.grandTotal - a.grandTotal);
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8">
@@ -488,6 +531,43 @@ export default async function StatsPage({ searchParams }: PageProps) {
               {fieldingResults.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-3 py-6 text-center text-foreground/50">
+                    データがありません
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">サポート実績</h2>
+        <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
+          <table className="w-full min-w-max text-right text-sm tabular-nums">
+            <thead className="bg-surface-muted">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium text-foreground/50">選手</th>
+                {SUPPORT_ROLES.map(({ key, label }) => (
+                  <th key={key} className="px-3 py-2 font-medium text-foreground/50">
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {supportResults.map(({ player, totals }) => (
+                <tr key={player.id} className="border-t border-border-subtle">
+                  <td className="px-3 py-2 text-left font-medium">{player.name}</td>
+                  {SUPPORT_ROLES.map(({ key }) => (
+                    <td key={key} className="px-3 py-2">
+                      {totals[key]}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              {supportResults.length === 0 && (
+                <tr>
+                  <td colSpan={1 + SUPPORT_ROLES.length} className="px-3 py-6 text-center text-foreground/50">
                     データがありません
                   </td>
                 </tr>

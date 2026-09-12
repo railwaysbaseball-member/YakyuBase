@@ -4,11 +4,14 @@ import { useActionState, useState } from "react";
 
 import { createGame } from "@/lib/games/createGame";
 import { updateGame } from "@/lib/games/updateGame";
-import type {
-  BatterDraft,
-  PitcherDraft,
-  PlateResultDraft,
-  PlayerRef,
+import {
+  SUPPORT_ROLES,
+  type BatterDraft,
+  type PitcherDraft,
+  type PlateResultDraft,
+  type PlayerRef,
+  type SupportDraft,
+  type SupportRole,
 } from "@/lib/games/buildGameRows";
 import type { GameFormInitialData } from "@/lib/games/gameToFormState";
 import { POSITION_OPTIONS, PLATE_RESULT_OPTIONS } from "@/lib/games/plateResultVocabulary";
@@ -19,6 +22,7 @@ type PlayerOption = { id: string; name: string; number: number | null };
 
 type BatterState = BatterDraft & { key: string };
 type PitcherState = PitcherDraft & { key: string };
+type SupportState = SupportDraft & { key: string };
 
 const inputClass =
   "rounded-md border border-border-subtle bg-transparent px-3 py-2 text-sm outline-none focus:border-team-red";
@@ -86,6 +90,12 @@ function emptyPitcher(isStarter: boolean): PitcherState {
   };
 }
 
+function emptySupport(): SupportState {
+  const roles = {} as Record<SupportRole, boolean>;
+  for (const { key } of SUPPORT_ROLES) roles[key] = false;
+  return { key: nextKey(), player: emptyPlayerRef(), roles };
+}
+
 function todayStr(): string {
   const d = new Date();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -134,6 +144,9 @@ export default function GameEntryForm({
   const [pitchers, setPitchers] = useState<PitcherState[]>(
     initialData ? initialData.pitchers.map((p) => ({ ...p, key: nextKey() })) : [emptyPitcher(true)]
   );
+  const [support, setSupport] = useState<SupportState[]>(
+    initialData ? initialData.support.map((s) => ({ ...s, key: nextKey() })) : []
+  );
 
   function setInningCount(n: number) {
     const count = Math.max(1, n);
@@ -158,6 +171,10 @@ export default function GameEntryForm({
     setPitchers((prev) => prev.map((p) => ({ ...p, isStarter: p.key === key })));
   }
 
+  function updateSupport(key: string, patch: Partial<SupportState>) {
+    setSupport((prev) => prev.map((s) => (s.key === key ? { ...s, ...patch } : s)));
+  }
+
   const payload = {
     date,
     startTime,
@@ -170,6 +187,7 @@ export default function GameEntryForm({
     // key はReactのリスト管理専用（サーバー側では無視される）なので剥がさず送ってよい
     batters,
     pitchers,
+    support,
   };
 
   return (
@@ -505,6 +523,48 @@ export default function GameEntryForm({
           className={`${secondaryButtonClass} w-fit`}
         >
           ＋ 投手を追加
+        </button>
+      </section>
+
+      {/* サポート実績 */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">サポート実績</h2>
+        <div className="flex flex-col gap-3">
+          {support.map((s) => (
+            <div key={s.key} className="flex flex-wrap items-center gap-2 rounded-xl border border-border-subtle bg-surface p-3">
+              <PlayerPicker
+                players={players}
+                value={s.player}
+                onChange={(next) => updateSupport(s.key, { player: next })}
+              />
+              {SUPPORT_ROLES.map(({ key: roleKey, label }) => (
+                <label key={roleKey} className="flex items-center gap-1 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={s.roles[roleKey]}
+                    onChange={(e) =>
+                      updateSupport(s.key, { roles: { ...s.roles, [roleKey]: e.target.checked } })
+                    }
+                  />
+                  {label}
+                </label>
+              ))}
+              <button
+                type="button"
+                onClick={() => setSupport((prev) => prev.filter((x) => x.key !== s.key))}
+                className="ml-auto text-xs text-loss underline"
+              >
+                削除
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => setSupport((prev) => [...prev, emptySupport()])}
+          className={`${secondaryButtonClass} w-fit`}
+        >
+          ＋ サポートを追加
         </button>
       </section>
 

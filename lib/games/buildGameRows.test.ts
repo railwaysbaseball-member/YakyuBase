@@ -4,6 +4,7 @@ import {
   buildGameRow,
   buildPitchingRows,
   buildPlateResult,
+  buildSupportRows,
   newPlayerNamesFromPayload,
   resolvePlayerId,
   sumInnings,
@@ -15,7 +16,24 @@ import {
   type PitcherDraft,
   type PlateResultDraft,
   type PlayerRef,
+  type SupportDraft,
+  type SupportRole,
 } from "./buildGameRows";
+
+function support(roles: Partial<Record<SupportRole, boolean>>, playerId = "まもこ"): SupportDraft {
+  const allRoles = {
+    participate: false,
+    manage: false,
+    bench: false,
+    score: false,
+    umpire: false,
+    camera: false,
+    watch: false,
+    cheer: false,
+    ...roles,
+  };
+  return { player: existingPlayer(playerId), roles: allRoles };
+}
 
 function existingPlayer(id: string): PlayerRef {
   return { mode: "existing", playerId: id, newName: "" };
@@ -84,6 +102,7 @@ function payload(overrides: Partial<GameFormPayload> = {}): GameFormPayload {
     inningsOpponent: ["0", "1", "1"],
     batters: [batter()],
     pitchers: [pitcher()],
+    support: [],
     ...overrides,
   };
 }
@@ -293,5 +312,63 @@ describe("buildPitchingRows", () => {
     );
     expect(rows[0].decision).toBe("W");
     expect(rows[0].is_starter).toBe(true);
+  });
+});
+
+describe("buildSupportRows", () => {
+  it("drops rows with no player selected", () => {
+    const rows = buildSupportRows("g", payload({ support: [support({ score: true }, "") ] }));
+    expect(rows).toEqual([]);
+  });
+
+  it("drops rows where a player is selected but no role is checked (empty scaffolding row)", () => {
+    const rows = buildSupportRows("g", payload({ support: [support({})] }));
+    expect(rows).toEqual([]);
+  });
+
+  it("keeps a row with at least one role checked, setting unchecked roles to 0", () => {
+    const rows = buildSupportRows("g", payload({ support: [support({ score: true, cheer: true })] }));
+    expect(rows).toEqual([
+      {
+        game_id: "g",
+        player_id: "まもこ",
+        participate: 0,
+        manage: 0,
+        bench: 0,
+        score: 1,
+        umpire: 0,
+        camera: 0,
+        watch: 0,
+        cheer: 1,
+      },
+    ]);
+  });
+
+  it("supports multiple support entries for different players", () => {
+    const rows = buildSupportRows(
+      "g",
+      payload({
+        support: [support({ umpire: true }, "選手A"), support({ watch: true }, "選手B")],
+      })
+    );
+    expect(rows.map((r) => r.player_id)).toEqual(["選手A", "選手B"]);
+  });
+});
+
+describe("validateGamePayload (support)", () => {
+  it("rejects duplicate players among support entries", () => {
+    expect(
+      validateGamePayload(
+        payload({
+          support: [support({ score: true }, "まもこ"), support({ cheer: true }, "まもこ")],
+        })
+      )
+    ).toMatch(/サポートに複数回登録/);
+  });
+
+  it("does not reject an otherwise-valid payload with support entries", () => {
+    expect(
+      validateGamePayload(payload({ support: [support({ score: true })] }))
+    ).toBeNull();
   });
 });

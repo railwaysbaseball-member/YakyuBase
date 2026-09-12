@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { supabase } from "@/utils/supabaseClient";
 import { getCurrentPlayer } from "@/lib/auth/session";
+import { SUPPORT_ROLES } from "@/lib/games/buildGameRows";
 import type { PlateResult } from "@/types/plateResult";
 import DeleteGameButton from "./DeleteGameButton";
 
@@ -58,10 +59,15 @@ export default async function GameDetailPage({ params }: PageProps) {
     .select("*, players(name)")
     .eq("game_id", gameId);
 
+  const { data: support, error: supportError } = await supabase
+    .from("support_stats")
+    .select("*, players(name)")
+    .eq("game_id", gameId);
+
   const player = await getCurrentPlayer();
 
-  if (gameError || battingError || pitchingError || !game || !batting || !pitching) {
-    console.error(gameError, battingError, pitchingError);
+  if (gameError || battingError || pitchingError || supportError || !game || !batting || !pitching) {
+    console.error(gameError, battingError, pitchingError, supportError);
     return <div className="p-4">データ取得エラーが発生しました</div>;
   }
 
@@ -281,6 +287,38 @@ export default async function GameDetailPage({ params }: PageProps) {
           </table>
         </div>
       </section>
+
+      {support.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-bold">サポート実績</h2>
+          <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
+            <table className="w-full min-w-max text-center text-sm tabular-nums">
+              <thead className="bg-surface-muted">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium text-foreground/50">選手</th>
+                  {SUPPORT_ROLES.map(({ key, label }) => (
+                    <th key={key} className="px-2 py-2 font-medium text-foreground/50">
+                      {label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {support.map((s) => (
+                  <tr key={s.id} className="border-t border-border-subtle">
+                    <td className="px-3 py-2 text-left font-medium">{s.players?.name}</td>
+                    {SUPPORT_ROLES.map(({ key }) => (
+                      <td key={key} className="px-2 py-2">
+                        {s[key] ? "○" : ""}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

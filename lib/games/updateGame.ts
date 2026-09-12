@@ -10,6 +10,7 @@ import {
   buildGameRow,
   buildPitchingRows,
   buildPlateResult,
+  buildSupportRows,
   newPlayerNamesFromPayload,
   resolvePlayerId,
   toIntOrNull,
@@ -109,6 +110,25 @@ export async function updateGame(
       error:
         "投手成績の登録に失敗しました（既存データは削除済みです）: " + pitchingError.message,
     };
+  }
+
+  // --- サポート実績（全置換。任意項目のため0件でも正常） ---
+  const { error: supportDeleteError } = await supabase
+    .from("support_stats")
+    .delete()
+    .eq("game_id", gameId);
+  if (supportDeleteError) {
+    return { error: "サポート実績の更新に失敗しました: " + supportDeleteError.message };
+  }
+  const supportRows = buildSupportRows(gameId, payload);
+  if (supportRows.length > 0) {
+    const { error: supportError } = await supabase.from("support_stats").insert(supportRows);
+    if (supportError) {
+      return {
+        error:
+          "サポート実績の登録に失敗しました（既存データは削除済みです）: " + supportError.message,
+      };
+    }
   }
 
   revalidatePath("/games");

@@ -21,6 +21,7 @@ export default async function EditGamePage({ params }: PageProps) {
     { data: game, error: gameError },
     { data: battingRows, error: battingError },
     { data: pitchingRows, error: pitchingError },
+    { data: supportRows, error: supportError },
     { data: players },
     { data: games },
   ] = await Promise.all([
@@ -39,6 +40,10 @@ export default async function EditGamePage({ params }: PageProps) {
         "player_id, innings, er, runs, batters_faced, strikeouts, walks, hbp, hits_allowed, hr_allowed, pitches, wp, balk, decision, is_starter"
       )
       .eq("game_id", gameId),
+    supabase
+      .from("support_stats")
+      .select("player_id, participate, manage, bench, score, umpire, camera, watch, cheer")
+      .eq("game_id", gameId),
     fetchAllRows<PlayerOption>((from, to) =>
       supabase.from("players").select("id, name, number").range(from, to)
     ),
@@ -50,8 +55,8 @@ export default async function EditGamePage({ params }: PageProps) {
   if (gameError || !game) {
     notFound();
   }
-  if (battingError || pitchingError) {
-    console.error(battingError, pitchingError);
+  if (battingError || pitchingError || supportError) {
+    console.error(battingError, pitchingError, supportError);
     return <div className="p-4">データ取得エラーが発生しました</div>;
   }
 
@@ -71,7 +76,7 @@ export default async function EditGamePage({ params }: PageProps) {
     ...new Set((games ?? []).map((g) => g.stadium).filter((v): v is string => Boolean(v))),
   ].sort();
 
-  const initialData = gameToFormState(game, battingRows ?? [], pitchingRows ?? []);
+  const initialData = gameToFormState(game, battingRows ?? [], pitchingRows ?? [], supportRows ?? []);
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-10">

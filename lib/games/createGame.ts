@@ -11,6 +11,7 @@ import {
   buildGameRow,
   buildPitchingRows,
   buildPlateResult,
+  buildSupportRows,
   newPlayerNamesFromPayload,
   resolvePlayerId,
   toIntOrNull,
@@ -25,6 +26,7 @@ export type {
   PitcherDraft,
   PlateResultDraft,
   PlayerRef,
+  SupportDraft,
 } from "@/lib/games/buildGameRows";
 
 export type CreateGameState = { error: string } | undefined;
@@ -110,6 +112,18 @@ export async function createGame(
     await supabase.from("game_batting_stats").delete().eq("game_id", gameId);
     await supabase.from("games").delete().eq("id", gameId);
     return { error: "投手成績の登録に失敗しました: " + pitchingError.message };
+  }
+
+  // --- サポート実績（任意項目。1件も無ければ何もしない） ---
+  const supportRows = buildSupportRows(gameId, payload);
+  if (supportRows.length > 0) {
+    const { error: supportError } = await supabase.from("support_stats").insert(supportRows);
+    if (supportError) {
+      await supabase.from("game_pitching_stats").delete().eq("game_id", gameId);
+      await supabase.from("game_batting_stats").delete().eq("game_id", gameId);
+      await supabase.from("games").delete().eq("id", gameId);
+      return { error: "サポート実績の登録に失敗しました: " + supportError.message };
+    }
   }
 
   revalidatePath("/games");
