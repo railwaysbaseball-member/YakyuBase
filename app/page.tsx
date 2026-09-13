@@ -228,6 +228,12 @@ export default async function Home() {
                   ? ` ・ vs ${(nextSchedule as TeamSchedule).opponent}`
                   : ""}
               </span>
+              <span className="truncate text-xs text-foreground/50">
+                {(nextSchedule as TeamSchedule).start_time
+                  ? (nextSchedule as TeamSchedule).start_time!.slice(0, 5)
+                  : "時刻未定"}
+                {(nextSchedule as TeamSchedule).place ? ` ・ ${(nextSchedule as TeamSchedule).place}` : ""}
+              </span>
               {notRespondedCount != null && notRespondedCount > 0 && (
                 <span className="text-xs font-semibold text-loss">未回答 {notRespondedCount}人</span>
               )}
