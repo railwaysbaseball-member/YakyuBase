@@ -18,7 +18,7 @@ type PageProps = {
   searchParams: Promise<{ season?: string }>;
 };
 
-type BattingRow = { game_id: string; plate_results: PlateResult[] | null };
+type BattingRow = { game_id: string; order_no: number | null; plate_results: PlateResult[] | null };
 type SupportRow = { game_id: string } & Record<SupportRole, number>;
 type GameRow = { id: string; date: string; opponent: string };
 
@@ -62,7 +62,7 @@ export default async function PlayerDetailPage({ params, searchParams }: PagePro
     { data: supportRows, error: supportError },
     { data: seasonParamsRows, error: seasonParamsError },
   ] = await Promise.all([
-    supabase.from("game_batting_stats").select("game_id, plate_results").eq("player_id", id),
+    supabase.from("game_batting_stats").select("game_id, order_no, plate_results").eq("player_id", id),
     supabase.from("game_pitching_stats").select("*").eq("player_id", id),
     supabase.from("game_fielding_stats").select("*").eq("player_id", id),
     supabase
@@ -146,6 +146,114 @@ export default async function PlayerDetailPage({ params, searchParams }: PagePro
     supportTotals[key] = supportInScope.reduce((acc, r) => acc + (r[key] ?? 0), 0);
   }
   const hasSupport = SUPPORT_ROLES.some(({ key }) => supportTotals[key] > 0);
+
+  // --- 試合別成績（打撃・投手）---
+  const gameBattingRows = battingInScope
+    .map((r) => {
+      const g = gameById.get(r.game_id);
+      if (!g) return null;
+      return { gameId: r.game_id, date: g.date, opponent: g.opponent, calc: calcBatting(r.plate_results ?? []) };
+    })
+    .filter((v): v is NonNullable<typeof v> => v !== null)
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
+
+  const gamePitchingRows = pitchingInScope
+    .map((r) => {
+      const g = gameById.get(r.game_id);
+      if (!g) return null;
+      return {
+        gameId: r.game_id,
+        date: g.date,
+        opponent: g.opponent,
+        calc: calcPitching([r], {
+          qsMinInnings: seasonParams?.qs ?? undefined,
+          qsMaxEarnedRuns: seasonParams?.earned_runs ?? undefined,
+        }),
+      };
+    })
+    .filter((v): v is NonNullable<typeof v> => v !== null)
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
+
+  // --- 月別成績（打撃）---
+  function formatMonth(month: string): string {
+    const [y, m] = month.split("-");
+    return `${y}年${Number(m)}月`;
+  }
+  const monthlyBattingMap = new Map<string, { games: Set<string>; results: PlateResult[] }>();
+  for (const r of battingInScope) {
+    const g = gameById.get(r.game_id);
+    if (!g) continue;
+    const month = g.date.slice(0, 7);
+    const entry = monthlyBattingMap.get(month) ?? { games: new Set<string>(), results: [] };
+    entry.games.add(r.game_id);
+    entry.results.push(...((r.plate_results ?? []) as PlateResult[]));
+    monthlyBattingMap.set(month, entry);
+  }
+  const monthlyBattingRows = [...monthlyBattingMap.entries()]
+    .map(([month, { games, results }]) => ({ month, games: games.size, calc: calcBatting(results) }))
+    .sort((a, b) => (a.month < b.month ? 1 : -1));
+
+  // --- 打順別成績 ---
+  const orderBattingMap = new Map<number, { games: Set<string>; results: PlateResult[] }>();
+  for (const r of battingInScope) {
+    if (r.order_no == null) continue;
+    const entry = orderBattingMap.get(r.order_no) ?? { games: new Set<string>(), results: [] };
+    entry.games.add(r.game_id);
+    entry.results.push(...((r.plate_results ?? []) as PlateResult[]));
+    orderBattingMap.set(r.order_no, entry);
+  }
+  const orderBattingRows = [...orderBattingMap.entries()]
+    .map(([orderNo, { games, results }]) => ({ orderNo, games: games.size, calc: calcBatting(results) }))
+    .sort((a, b) => a.orderNo - b.orderNo);
+
+  // --- 対戦左右別成績 ---
+  const HAND_LABELS: Record<string, string> = { 右: "対右投手", 左: "対左投手", 不明: "不明" };
+  const HAND_ORDER = ["右", "左", "不明"];
+  const handBattingMap = new Map<string, PlateResult[]>();
+  for (const pr of plateResults) {
+    if (!pr.pitcher_hand) continue;
+    const list = handBattingMap.get(pr.pitcher_hand) ?? [];
+    list.push(pr);
+    handBattingMap.set(pr.pitcher_hand, list);
+  }
+  const handBattingRows = HAND_ORDER.filter((h) => handBattingMap.has(h)).map((hand) => ({
+    hand,
+    label: HAND_LABELS[hand] ?? hand,
+    calc: calcBatting(handBattingMap.get(hand)!),
+  }));
+
+  // --- 打球傾向（方向別・種類別）---
+  const DIRECTION_ORDER = ["投", "捕", "一", "二", "三", "遊", "左", "中", "右"];
+  const directionMap = new Map<string, PlateResult[]>();
+  for (const pr of plateResults) {
+    if (!pr.direction) continue;
+    const list = directionMap.get(pr.direction) ?? [];
+    list.push(pr);
+    directionMap.set(pr.direction, list);
+  }
+  const directionRows = [...directionMap.entries()]
+    .map(([direction, results]) => ({ direction, calc: calcBatting(results) }))
+    .sort((a, b) => {
+      const ai = DIRECTION_ORDER.indexOf(a.direction);
+      const bi = DIRECTION_ORDER.indexOf(b.direction);
+      if (ai === -1 && bi === -1) return b.calc.ab - a.calc.ab;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+
+  const CONTACT_TYPE_ORDER = ["ゴロ", "フライ", "ライナー", "不明"];
+  const contactTypeMap = new Map<string, PlateResult[]>();
+  for (const pr of plateResults) {
+    if (!pr.contact_type) continue;
+    const list = contactTypeMap.get(pr.contact_type) ?? [];
+    list.push(pr);
+    contactTypeMap.set(pr.contact_type, list);
+  }
+  const contactTypeRows = CONTACT_TYPE_ORDER.filter((t) => contactTypeMap.has(t)).map((type) => ({
+    type,
+    calc: calcBatting(contactTypeMap.get(type)!),
+  }));
 
   type GameLogEntry = { gameId: string; date: string; opponent: string; roles: string[] };
   const gameLog = new Map<string, GameLogEntry>();
@@ -286,6 +394,262 @@ export default async function PlayerDetailPage({ params, searchParams }: PagePro
         <section className="flex flex-col gap-3">
           <h2 className="text-lg font-semibold">サポート実績</h2>
           <StatGrid items={SUPPORT_ROLES.map(({ key, label }) => ({ label, value: supportTotals[key] }))} />
+        </section>
+      )}
+
+      {gameBattingRows.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">試合別成績（打撃）</h2>
+          <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
+            <table className="w-full min-w-max text-right text-xs sm:text-sm tabular-nums">
+              <thead className="bg-surface-muted">
+                <tr>
+                  <th className="px-2 py-1.5 text-left font-medium text-foreground/50 sm:px-3 sm:py-2">試合</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打席</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打数</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">安打</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">本塁打</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打点</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">得点</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">盗塁</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">三振</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">四球</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打率</th>
+                </tr>
+              </thead>
+              <tbody>
+                {gameBattingRows.map((r) => (
+                  <tr key={r.gameId} className="border-t border-border-subtle">
+                    <td className="px-2 py-1.5 text-left font-medium sm:px-3 sm:py-2">
+                      <Link href={`/games/${r.gameId}`} className="hover:underline">
+                        {r.date} vs {r.opponent}
+                      </Link>
+                    </td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.pa}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.ab}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.hits}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.homeruns}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.rbi}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.runs}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.steals}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.strikeouts}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.walks}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{formatAvg(r.calc.avg)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {gamePitchingRows.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">試合別成績（投手）</h2>
+          <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
+            <table className="w-full min-w-max text-right text-xs sm:text-sm tabular-nums">
+              <thead className="bg-surface-muted">
+                <tr>
+                  <th className="px-2 py-1.5 text-left font-medium text-foreground/50 sm:px-3 sm:py-2">試合</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">投球回</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">自責点</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">失点</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">奪三振</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">四球</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">与死球</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">被安打</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">防御率</th>
+                </tr>
+              </thead>
+              <tbody>
+                {gamePitchingRows.map((r) => (
+                  <tr key={r.gameId} className="border-t border-border-subtle">
+                    <td className="px-2 py-1.5 text-left font-medium sm:px-3 sm:py-2">
+                      <Link href={`/games/${r.gameId}`} className="hover:underline">
+                        {r.date} vs {r.opponent}
+                      </Link>
+                    </td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{formatInnings(r.calc.outs)}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.er}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.runs}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.strikeouts}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.walks}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.hbp}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.hitsAllowed}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{formatRate(r.calc.era)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {monthlyBattingRows.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">月別成績（打撃）</h2>
+          <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
+            <table className="w-full min-w-max text-right text-xs sm:text-sm tabular-nums">
+              <thead className="bg-surface-muted">
+                <tr>
+                  <th className="px-2 py-1.5 text-left font-medium text-foreground/50 sm:px-3 sm:py-2">月</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">試合</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打席</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打数</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">安打</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">本塁打</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打点</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打率</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">OPS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {monthlyBattingRows.map((r) => (
+                  <tr key={r.month} className="border-t border-border-subtle">
+                    <td className="px-2 py-1.5 text-left font-medium sm:px-3 sm:py-2">{formatMonth(r.month)}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.games}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.pa}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.ab}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.hits}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.homeruns}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.rbi}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{formatAvg(r.calc.avg)}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{formatAvg(r.calc.ops)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {orderBattingRows.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">打順別成績</h2>
+          <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
+            <table className="w-full min-w-max text-right text-xs sm:text-sm tabular-nums">
+              <thead className="bg-surface-muted">
+                <tr>
+                  <th className="px-2 py-1.5 text-left font-medium text-foreground/50 sm:px-3 sm:py-2">打順</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">試合</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打席</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打数</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">安打</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">本塁打</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打点</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打率</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">OPS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orderBattingRows.map((r) => (
+                  <tr key={r.orderNo} className="border-t border-border-subtle">
+                    <td className="px-2 py-1.5 text-left font-medium sm:px-3 sm:py-2">{r.orderNo}番</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.games}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.pa}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.ab}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.hits}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.homeruns}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.rbi}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{formatAvg(r.calc.avg)}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{formatAvg(r.calc.ops)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {(directionRows.length > 0 || contactTypeRows.length > 0) && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">打球傾向</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {directionRows.length > 0 && (
+              <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
+                <table className="w-full min-w-max text-right text-xs sm:text-sm tabular-nums">
+                  <thead className="bg-surface-muted">
+                    <tr>
+                      <th className="px-2 py-1.5 text-left font-medium text-foreground/50 sm:px-3 sm:py-2">方向</th>
+                      <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打数</th>
+                      <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">安打</th>
+                      <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打率</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {directionRows.map((r) => (
+                      <tr key={r.direction} className="border-t border-border-subtle">
+                        <td className="px-2 py-1.5 text-left font-medium sm:px-3 sm:py-2">{r.direction}</td>
+                        <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.ab}</td>
+                        <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.hits}</td>
+                        <td className="px-2 py-1.5 sm:px-3 sm:py-2">{formatAvg(r.calc.avg)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {contactTypeRows.length > 0 && (
+              <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
+                <table className="w-full min-w-max text-right text-xs sm:text-sm tabular-nums">
+                  <thead className="bg-surface-muted">
+                    <tr>
+                      <th className="px-2 py-1.5 text-left font-medium text-foreground/50 sm:px-3 sm:py-2">種類</th>
+                      <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打数</th>
+                      <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">安打</th>
+                      <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打率</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contactTypeRows.map((r) => (
+                      <tr key={r.type} className="border-t border-border-subtle">
+                        <td className="px-2 py-1.5 text-left font-medium sm:px-3 sm:py-2">{r.type}</td>
+                        <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.ab}</td>
+                        <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.hits}</td>
+                        <td className="px-2 py-1.5 sm:px-3 sm:py-2">{formatAvg(r.calc.avg)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {handBattingRows.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">対戦左右別成績</h2>
+          <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
+            <table className="w-full min-w-max text-right text-xs sm:text-sm tabular-nums">
+              <thead className="bg-surface-muted">
+                <tr>
+                  <th className="px-2 py-1.5 text-left font-medium text-foreground/50 sm:px-3 sm:py-2">対戦投手</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打席</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打数</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">安打</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">本塁打</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打点</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">打率</th>
+                  <th className="px-2 py-1.5 font-medium text-foreground/50 sm:px-3 sm:py-2">OPS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {handBattingRows.map((r) => (
+                  <tr key={r.hand} className="border-t border-border-subtle">
+                    <td className="px-2 py-1.5 text-left font-medium sm:px-3 sm:py-2">{r.label}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.pa}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.ab}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.hits}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.homeruns}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{r.calc.rbi}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{formatAvg(r.calc.avg)}</td>
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">{formatAvg(r.calc.ops)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 
