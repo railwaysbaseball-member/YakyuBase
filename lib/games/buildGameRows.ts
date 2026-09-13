@@ -71,6 +71,15 @@ export type SupportDraft = {
   roles: Record<SupportRole, boolean>;
 };
 
+export type FieldingDraft = {
+  player: PlayerRef;
+  putout: string;
+  assist: string;
+  error: string;
+  beauty: string;
+  rarePlay: string;
+};
+
 export type GameFormPayload = {
   date: string;
   startTime: string;
@@ -83,6 +92,7 @@ export type GameFormPayload = {
   batters: BatterDraft[];
   pitchers: PitcherDraft[];
   support: SupportDraft[];
+  fielding: FieldingDraft[];
 };
 
 export function resolvePlayerId(ref: PlayerRef): string | null {
@@ -189,6 +199,13 @@ export function validateGamePayload(payload: GameFormPayload): string | null {
     return "同じ選手がサポートに複数回登録されています。";
   }
 
+  const resolvedFieldingIds = payload.fielding
+    .map((f) => resolvePlayerId(f.player))
+    .filter((id): id is string => id !== null);
+  if (new Set(resolvedFieldingIds).size !== resolvedFieldingIds.length) {
+    return "同じ選手が守備に複数回登録されています。";
+  }
+
   return null;
 }
 
@@ -202,6 +219,9 @@ export function newPlayerNamesFromPayload(payload: GameFormPayload): Set<string>
   }
   for (const s of payload.support) {
     if (s.player.mode === "new") names.add(s.player.newName.trim());
+  }
+  for (const f of payload.fielding) {
+    if (f.player.mode === "new") names.add(f.player.newName.trim());
   }
   return names;
 }
@@ -261,6 +281,40 @@ export function buildSupportRows(gameId: string, payload: GameFormPayload) {
       };
       for (const { key } of SUPPORT_ROLES) row[key] = s.roles[key] ? 1 : 0;
       return row;
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null);
+}
+
+/**
+ * 選手が未選択、またはどの項目も未入力（空欄）の行は守備成績として意味を
+ * 持たないので、insert対象から静かに除外する（サポート実績と同じ理由で
+ * 完全に任意項目のためバリデーションエラーにはしない）。値が1つでも入力
+ * されていれば、他の未入力項目は0として扱う。
+ */
+export function buildFieldingRows(gameId: string, payload: GameFormPayload) {
+  return payload.fielding
+    .map((f) => {
+      const playerId = resolvePlayerId(f.player);
+      if (!playerId) return null;
+
+      const putout = toIntOrNull(f.putout);
+      const assist = toIntOrNull(f.assist);
+      const error = toIntOrNull(f.error);
+      const beauty = toIntOrNull(f.beauty);
+      const rarePlay = toIntOrNull(f.rarePlay);
+      if (putout === null && assist === null && error === null && beauty === null && rarePlay === null) {
+        return null;
+      }
+
+      return {
+        game_id: gameId,
+        player_id: playerId,
+        putout: putout ?? 0,
+        assist: assist ?? 0,
+        error: error ?? 0,
+        beauty: beauty ?? 0,
+        rare_play: rarePlay ?? 0,
+      };
     })
     .filter((r): r is NonNullable<typeof r> => r !== null);
 }

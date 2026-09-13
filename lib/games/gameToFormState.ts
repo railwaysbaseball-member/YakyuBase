@@ -2,6 +2,7 @@ import type { PlateResult } from "@/types/plateResult";
 import {
   SUPPORT_ROLES,
   type BatterDraft,
+  type FieldingDraft,
   type GameFormPayload,
   type PitcherDraft,
   type PlateResultDraft,
@@ -50,6 +51,15 @@ type SupportStatsRow = {
   player_id: string;
 } & Record<SupportRole, number>;
 
+type FieldingStatsRow = {
+  player_id: string;
+  putout: number;
+  assist: number;
+  error: number;
+  beauty: number;
+  rare_play: number;
+};
+
 export type GameFormInitialData = Omit<GameFormPayload, never>;
 
 function cellToStr(v: number | null): string {
@@ -82,7 +92,8 @@ export function gameToFormState(
   game: GameRow,
   battingRows: BattingStatsRow[],
   pitchingRows: PitchingStatsRow[],
-  supportRows: SupportStatsRow[] = []
+  supportRows: SupportStatsRow[] = [],
+  fieldingRows: FieldingStatsRow[] = []
 ): GameFormInitialData {
   const batters: BatterDraft[] = [...battingRows]
     .sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0))
@@ -120,6 +131,15 @@ export function gameToFormState(
     };
   });
 
+  const fielding: FieldingDraft[] = fieldingRows.map((f) => ({
+    player: { mode: "existing", playerId: f.player_id, newName: "" },
+    putout: String(f.putout ?? 0),
+    assist: String(f.assist ?? 0),
+    error: String(f.error ?? 0),
+    beauty: String(f.beauty ?? 0),
+    rarePlay: String(f.rare_play ?? 0),
+  }));
+
   return {
     date: game.date,
     startTime: game.start_time ? game.start_time.slice(0, 5) : "",
@@ -132,5 +152,6 @@ export function gameToFormState(
     batters,
     pitchers,
     support,
+    fielding,
   };
 }

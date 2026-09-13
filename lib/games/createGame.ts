@@ -8,6 +8,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { calcBatting } from "@/lib/batting/calcBattingStats";
 import { nextGameId } from "@/lib/games/generateGameId";
 import {
+  buildFieldingRows,
   buildGameRow,
   buildPitchingRows,
   buildPlateResult,
@@ -22,6 +23,7 @@ import type { PlateResult } from "@/types/plateResult";
 
 export type {
   BatterDraft,
+  FieldingDraft,
   GameFormPayload,
   PitcherDraft,
   PlateResultDraft,
@@ -114,11 +116,24 @@ export async function createGame(
     return { error: "投手成績の登録に失敗しました: " + pitchingError.message };
   }
 
+  // --- 守備成績（任意項目。1件も無ければ何もしない） ---
+  const fieldingRows = buildFieldingRows(gameId, payload);
+  if (fieldingRows.length > 0) {
+    const { error: fieldingError } = await supabase.from("game_fielding_stats").insert(fieldingRows);
+    if (fieldingError) {
+      await supabase.from("game_pitching_stats").delete().eq("game_id", gameId);
+      await supabase.from("game_batting_stats").delete().eq("game_id", gameId);
+      await supabase.from("games").delete().eq("id", gameId);
+      return { error: "守備成績の登録に失敗しました: " + fieldingError.message };
+    }
+  }
+
   // --- サポート実績（任意項目。1件も無ければ何もしない） ---
   const supportRows = buildSupportRows(gameId, payload);
   if (supportRows.length > 0) {
     const { error: supportError } = await supabase.from("support_stats").insert(supportRows);
     if (supportError) {
+      await supabase.from("game_fielding_stats").delete().eq("game_id", gameId);
       await supabase.from("game_pitching_stats").delete().eq("game_id", gameId);
       await supabase.from("game_batting_stats").delete().eq("game_id", gameId);
       await supabase.from("games").delete().eq("id", gameId);

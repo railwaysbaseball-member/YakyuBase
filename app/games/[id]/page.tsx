@@ -64,10 +64,24 @@ export default async function GameDetailPage({ params }: PageProps) {
     .select("*, players(name)")
     .eq("game_id", gameId);
 
+  const { data: fielding, error: fieldingError } = await supabase
+    .from("game_fielding_stats")
+    .select("*, players(name)")
+    .eq("game_id", gameId);
+
   const player = await getCurrentPlayer();
 
-  if (gameError || battingError || pitchingError || supportError || !game || !batting || !pitching) {
-    console.error(gameError, battingError, pitchingError, supportError);
+  if (
+    gameError ||
+    battingError ||
+    pitchingError ||
+    supportError ||
+    fieldingError ||
+    !game ||
+    !batting ||
+    !pitching
+  ) {
+    console.error(gameError, battingError, pitchingError, supportError, fieldingError);
     return <div className="p-4">データ取得エラーが発生しました</div>;
   }
 
@@ -287,6 +301,38 @@ export default async function GameDetailPage({ params }: PageProps) {
           </table>
         </div>
       </section>
+
+      {fielding.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-bold">守備成績</h2>
+          <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
+            <table className="w-full min-w-max text-center text-sm tabular-nums">
+              <thead className="bg-surface-muted">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium text-foreground/50">選手</th>
+                  <th className="px-2 py-2 font-medium text-foreground/50">刺殺</th>
+                  <th className="px-2 py-2 font-medium text-foreground/50">補殺</th>
+                  <th className="px-2 py-2 font-medium text-foreground/50">失策</th>
+                  <th className="px-2 py-2 font-medium text-foreground/50">美技</th>
+                  <th className="px-2 py-2 font-medium text-foreground/50">珍技</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fielding.map((f) => (
+                  <tr key={f.id} className="border-t border-border-subtle">
+                    <td className="px-3 py-2 text-left font-medium">{f.players?.name}</td>
+                    <td className="px-2 py-2">{f.putout}</td>
+                    <td className="px-2 py-2">{f.assist}</td>
+                    <td className="px-2 py-2">{f.error}</td>
+                    <td className="px-2 py-2">{f.beauty}</td>
+                    <td className="px-2 py-2">{f.rare_play}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {support.length > 0 && (
         <section className="flex flex-col gap-3">

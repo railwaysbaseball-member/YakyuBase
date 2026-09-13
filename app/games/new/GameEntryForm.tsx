@@ -7,6 +7,7 @@ import { updateGame } from "@/lib/games/updateGame";
 import {
   SUPPORT_ROLES,
   type BatterDraft,
+  type FieldingDraft,
   type PitcherDraft,
   type PlateResultDraft,
   type PlayerRef,
@@ -23,6 +24,7 @@ type PlayerOption = { id: string; name: string; number: number | null };
 type BatterState = BatterDraft & { key: string };
 type PitcherState = PitcherDraft & { key: string };
 type SupportState = SupportDraft & { key: string };
+type FieldingState = FieldingDraft & { key: string };
 
 const inputClass =
   "rounded-md border border-border-subtle bg-transparent px-3 py-2 text-sm outline-none focus:border-team-red";
@@ -96,6 +98,18 @@ function emptySupport(): SupportState {
   return { key: nextKey(), player: emptyPlayerRef(), roles };
 }
 
+function emptyFielding(): FieldingState {
+  return {
+    key: nextKey(),
+    player: emptyPlayerRef(),
+    putout: "",
+    assist: "",
+    error: "",
+    beauty: "",
+    rarePlay: "",
+  };
+}
+
 function todayStr(): string {
   const d = new Date();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -147,6 +161,9 @@ export default function GameEntryForm({
   const [support, setSupport] = useState<SupportState[]>(
     initialData ? initialData.support.map((s) => ({ ...s, key: nextKey() })) : []
   );
+  const [fielding, setFielding] = useState<FieldingState[]>(
+    initialData ? initialData.fielding.map((f) => ({ ...f, key: nextKey() })) : []
+  );
 
   function setInningCount(n: number) {
     const count = Math.max(1, n);
@@ -175,6 +192,10 @@ export default function GameEntryForm({
     setSupport((prev) => prev.map((s) => (s.key === key ? { ...s, ...patch } : s)));
   }
 
+  function updateFielding(key: string, patch: Partial<FieldingState>) {
+    setFielding((prev) => prev.map((f) => (f.key === key ? { ...f, ...patch } : f)));
+  }
+
   const payload = {
     date,
     startTime,
@@ -188,6 +209,7 @@ export default function GameEntryForm({
     batters,
     pitchers,
     support,
+    fielding,
   };
 
   return (
@@ -523,6 +545,56 @@ export default function GameEntryForm({
           className={`${secondaryButtonClass} w-fit`}
         >
           ＋ 投手を追加
+        </button>
+      </section>
+
+      {/* 守備成績 */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">守備成績</h2>
+        <div className="flex flex-col gap-3">
+          {fielding.map((f) => (
+            <div key={f.key} className="flex flex-wrap items-center gap-2 rounded-xl border border-border-subtle bg-surface p-3">
+              <PlayerPicker
+                players={players}
+                value={f.player}
+                onChange={(next) => updateFielding(f.key, { player: next })}
+              />
+              {(
+                [
+                  ["putout", "刺殺"],
+                  ["assist", "補殺"],
+                  ["error", "失策"],
+                  ["beauty", "美技"],
+                  ["rarePlay", "珍技"],
+                ] as const
+              ).map(([field, label]) => (
+                <label key={field} className="flex items-center gap-1 text-xs">
+                  {label}
+                  <input
+                    type="number"
+                    min={0}
+                    value={f[field]}
+                    onChange={(e) => updateFielding(f.key, { [field]: e.target.value } as Partial<FieldingState>)}
+                    className={`${smallInputClass} w-14`}
+                  />
+                </label>
+              ))}
+              <button
+                type="button"
+                onClick={() => setFielding((prev) => prev.filter((x) => x.key !== f.key))}
+                className="ml-auto text-xs text-loss underline"
+              >
+                削除
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => setFielding((prev) => [...prev, emptyFielding()])}
+          className={`${secondaryButtonClass} w-fit`}
+        >
+          ＋ 守備成績を追加
         </button>
       </section>
 

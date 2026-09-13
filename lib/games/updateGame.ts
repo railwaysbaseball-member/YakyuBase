@@ -7,6 +7,7 @@ import { createClient } from "@/utils/supabase/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { calcBatting } from "@/lib/batting/calcBattingStats";
 import {
+  buildFieldingRows,
   buildGameRow,
   buildPitchingRows,
   buildPlateResult,
@@ -110,6 +111,25 @@ export async function updateGame(
       error:
         "投手成績の登録に失敗しました（既存データは削除済みです）: " + pitchingError.message,
     };
+  }
+
+  // --- 守備成績（全置換。任意項目のため0件でも正常） ---
+  const { error: fieldingDeleteError } = await supabase
+    .from("game_fielding_stats")
+    .delete()
+    .eq("game_id", gameId);
+  if (fieldingDeleteError) {
+    return { error: "守備成績の更新に失敗しました: " + fieldingDeleteError.message };
+  }
+  const fieldingRows = buildFieldingRows(gameId, payload);
+  if (fieldingRows.length > 0) {
+    const { error: fieldingError } = await supabase.from("game_fielding_stats").insert(fieldingRows);
+    if (fieldingError) {
+      return {
+        error:
+          "守備成績の登録に失敗しました（既存データは削除済みです）: " + fieldingError.message,
+      };
+    }
   }
 
   // --- サポート実績（全置換。任意項目のため0件でも正常） ---

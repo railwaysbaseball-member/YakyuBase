@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildFieldingRows,
   buildGameRow,
   buildPitchingRows,
   buildPlateResult,
@@ -12,6 +13,7 @@ import {
   toIntOrNull,
   validateGamePayload,
   type BatterDraft,
+  type FieldingDraft,
   type GameFormPayload,
   type PitcherDraft,
   type PlateResultDraft,
@@ -33,6 +35,18 @@ function support(roles: Partial<Record<SupportRole, boolean>>, playerId = "ま�
     ...roles,
   };
   return { player: existingPlayer(playerId), roles: allRoles };
+}
+
+function fielding(overrides: Partial<FieldingDraft> = {}, playerId = "まもこ"): FieldingDraft {
+  return {
+    player: existingPlayer(playerId),
+    putout: "",
+    assist: "",
+    error: "",
+    beauty: "",
+    rarePlay: "",
+    ...overrides,
+  };
 }
 
 function existingPlayer(id: string): PlayerRef {
@@ -103,6 +117,7 @@ function payload(overrides: Partial<GameFormPayload> = {}): GameFormPayload {
     batters: [batter()],
     pitchers: [pitcher()],
     support: [],
+    fielding: [],
     ...overrides,
   };
 }
@@ -369,6 +384,53 @@ describe("validateGamePayload (support)", () => {
   it("does not reject an otherwise-valid payload with support entries", () => {
     expect(
       validateGamePayload(payload({ support: [support({ score: true })] }))
+    ).toBeNull();
+  });
+});
+
+describe("buildFieldingRows", () => {
+  it("drops rows with no player selected", () => {
+    const rows = buildFieldingRows("g", payload({ fielding: [fielding({ putout: "3" }, "")] }));
+    expect(rows).toEqual([]);
+  });
+
+  it("drops rows where a player is selected but every field is blank (empty scaffolding row)", () => {
+    const rows = buildFieldingRows("g", payload({ fielding: [fielding()] }));
+    expect(rows).toEqual([]);
+  });
+
+  it("keeps a row with at least one field entered, defaulting blank fields to 0", () => {
+    const rows = buildFieldingRows("g", payload({ fielding: [fielding({ putout: "3", error: "1" })] }));
+    expect(rows).toEqual([
+      { game_id: "g", player_id: "まもこ", putout: 3, assist: 0, error: 1, beauty: 0, rare_play: 0 },
+    ]);
+  });
+
+  it("supports multiple fielding entries for different players", () => {
+    const rows = buildFieldingRows(
+      "g",
+      payload({
+        fielding: [fielding({ assist: "2" }, "選手A"), fielding({ beauty: "1" }, "選手B")],
+      })
+    );
+    expect(rows.map((r) => r.player_id)).toEqual(["選手A", "選手B"]);
+  });
+});
+
+describe("validateGamePayload (fielding)", () => {
+  it("rejects duplicate players among fielding entries", () => {
+    expect(
+      validateGamePayload(
+        payload({
+          fielding: [fielding({ putout: "1" }, "まもこ"), fielding({ assist: "1" }, "まもこ")],
+        })
+      )
+    ).toMatch(/守備に複数回登録/);
+  });
+
+  it("does not reject an otherwise-valid payload with fielding entries", () => {
+    expect(
+      validateGamePayload(payload({ fielding: [fielding({ putout: "1" })] }))
     ).toBeNull();
   });
 });
