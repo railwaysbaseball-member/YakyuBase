@@ -174,7 +174,7 @@ function ScheduleSection({
                 className="flex scroll-mt-20 flex-col gap-2 rounded-xl border border-border-subtle bg-surface p-4"
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-start gap-4">
+                  <Link href={`/schedule/${s.id}`} className="flex items-start gap-4 hover:opacity-80">
                     <div className="flex w-14 shrink-0 flex-col items-center rounded-lg bg-surface-muted py-1.5">
                       <span className="text-xs font-medium text-foreground/50">
                         {weekday}
@@ -196,7 +196,7 @@ function ScheduleSection({
                         {s.place ? ` ・ ${s.place}` : ""}
                       </span>
                     </div>
-                  </div>
+                  </Link>
 
                   {(attendance.length > 0 || notResponded.length > 0) && (
                     <div className="flex shrink-0 flex-wrap items-center gap-1.5 sm:pl-4">
