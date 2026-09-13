@@ -79,8 +79,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 
         <main className="flex flex-1 flex-col">{children}</main>
 
-        <footer className="border-t border-border-subtle px-4 py-6 text-center text-xs text-foreground/50">
-          © 1995-{new Date().getFullYear()} レールウェイズ
+        <footer className="flex flex-col items-center gap-1 border-t border-border-subtle px-4 py-6 text-center text-xs text-foreground/50">
+          <span>© 1995-{new Date().getFullYear()} レールウェイズ</span>
+          <Link href="/privacy" className="hover:text-foreground hover:underline">
+            プライバシーポリシー
+          </Link>
         </footer>
       </body>
     </html>
