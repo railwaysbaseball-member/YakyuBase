@@ -71,19 +71,38 @@ export default function PrivacyPolicyPage() {
         </p>
       </Section>
 
-      <Section title="5. 情報の開示・削除">
+      <Section title="5. アクセス解析について">
+        <p>
+          本サイトはアクセス状況の把握のため、Google が提供するアクセス解析ツール「Google
+          アナリティクス」を利用しています。Google アナリティクスは、Cookie
+          を使用してユーザーのアクセス情報を収集しますが、氏名・メールアドレスなど個人を特定する情報は含まれません。この機能は
+          Cookie
+          を無効にすることで収集を拒否できます。詳細は
+          <a
+            href="https://marketingplatform.google.com/about/analytics/terms/jp/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-team-red underline"
+          >
+            Google アナリティクス利用規約
+          </a>
+          をご確認ください。
+        </p>
+      </Section>
+
+      <Section title="6. 情報の開示・削除">
         <p>
           チームメンバー本人から、自身に関する情報の開示・訂正・削除を求められた場合は、内容を確認の上、合理的な範囲で速やかに対応します。
         </p>
       </Section>
 
-      <Section title="6. プライバシーポリシーの変更">
+      <Section title="7. プライバシーポリシーの変更">
         <p>
           本ポリシーの内容は、必要に応じて予告なく変更することがあります。変更後の内容は本ページに掲載した時点から効力を持つものとします。
         </p>
       </Section>
 
-      <Section title="7. お問い合わせ">
+      <Section title="8. お問い合わせ">
         <p>
           本ポリシーに関するお問い合わせは、下記メールアドレスまでご連絡ください。
           <br />
