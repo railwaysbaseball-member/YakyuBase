@@ -21,7 +21,8 @@ export default async function LoginPage(props: PageProps<"/login">) {
       if (a.number == null) return 1;
       if (b.number == null) return -1;
       return a.number - b.number;
-    });
+    })
+    .map(({ id, name, number }) => ({ id, name, number }));
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-4 py-16">

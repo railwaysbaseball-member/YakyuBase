@@ -223,33 +223,62 @@ export default async function PlayerDetailPage({ params, searchParams }: PagePro
   }));
 
   // --- 打球傾向（方向別・種類別）---
+  // direction/contact_type は未入力のため、打席結果の表記（例: "中安"=中堅安打,
+  // "三ゴ"=三塁ゴロ, "左飛"=左翼フライ）から推定する。表記は先頭1文字が方向
+  // （投・捕・一・二・三・遊・左・中・右）、続く1〜2文字が結果というルール
+  // （calcBatting.ts の分類ロジックと同じ前提）。
   const DIRECTION_ORDER = ["投", "捕", "一", "二", "三", "遊", "左", "中", "右"];
-  const directionMap = new Map<string, PlateResult[]>();
-  for (const pr of plateResults) {
-    if (!pr.direction) continue;
-    const list = directionMap.get(pr.direction) ?? [];
-    list.push(pr);
-    directionMap.set(pr.direction, list);
-  }
-  const directionRows = [...directionMap.entries()]
-    .map(([direction, results]) => ({ direction, calc: calcBatting(results) }))
-    .sort((a, b) => {
-      const ai = DIRECTION_ORDER.indexOf(a.direction);
-      const bi = DIRECTION_ORDER.indexOf(b.direction);
-      if (ai === -1 && bi === -1) return b.calc.ab - a.calc.ab;
-      if (ai === -1) return 1;
-      if (bi === -1) return -1;
-      return ai - bi;
-    });
+  const DIRECTION_CHARS = new Set(DIRECTION_ORDER);
+  const NON_BATTED_BALL_TOKENS = ["四球", "死球", "三振", "振逃", "打妨", "代走"];
 
-  const CONTACT_TYPE_ORDER = ["ゴロ", "フライ", "ライナー", "不明"];
+  function isNonBattedBall(result: string): boolean {
+    return NON_BATTED_BALL_TOKENS.some((token) => result.includes(token));
+  }
+  function inferDirection(result: string): string | null {
+    if (isNonBattedBall(result)) return null;
+    const d = result.charAt(0);
+    return DIRECTION_CHARS.has(d) ? d : null;
+  }
+  function inferContactType(result: string): "ゴロ" | "フライ" | "ライナー" | null {
+    const direction = inferDirection(result);
+    if (!direction) return null;
+    const rest = result.slice(1);
+    const isOutfield = direction === "左" || direction === "中" || direction === "右";
+
+    if (rest.includes("ゴ")) return "ゴロ";
+    if (rest.includes("飛")) return "フライ";
+    if (rest.includes("直")) return "ライナー";
+    if (rest.includes("邪")) return "フライ"; // 邪飛（ファウルフライ）は必ず打球が浮いている
+    if (rest.includes("犠")) return isOutfield ? "フライ" : "ゴロ"; // 犠飛/犠打
+    if (rest.includes("併")) return "ゴロ"; // 併殺打はほぼ内野ゴロ
+    if (rest.includes("野")) return "ゴロ"; // 野選は走者封殺が前提なのでゴロ
+    if (rest === "内" || rest === "バ") return "ゴロ"; // 内野安打・バント安打
+    // 外野への安打（安・二・三・本）や失策は打球種類を表記から判別できない
+    return null;
+  }
+
+  const directionMap = new Map<string, PlateResult[]>();
   const contactTypeMap = new Map<string, PlateResult[]>();
   for (const pr of plateResults) {
-    if (!pr.contact_type) continue;
-    const list = contactTypeMap.get(pr.contact_type) ?? [];
-    list.push(pr);
-    contactTypeMap.set(pr.contact_type, list);
+    const direction = inferDirection(pr.result);
+    if (direction) {
+      const list = directionMap.get(direction) ?? [];
+      list.push(pr);
+      directionMap.set(direction, list);
+    }
+    const contactType = inferContactType(pr.result);
+    if (contactType) {
+      const list = contactTypeMap.get(contactType) ?? [];
+      list.push(pr);
+      contactTypeMap.set(contactType, list);
+    }
   }
+  const directionRows = DIRECTION_ORDER.filter((d) => directionMap.has(d)).map((direction) => ({
+    direction,
+    calc: calcBatting(directionMap.get(direction)!),
+  }));
+
+  const CONTACT_TYPE_ORDER = ["ゴロ", "フライ", "ライナー"] as const;
   const contactTypeRows = CONTACT_TYPE_ORDER.filter((t) => contactTypeMap.has(t)).map((type) => ({
     type,
     calc: calcBatting(contactTypeMap.get(type)!),
@@ -563,7 +592,10 @@ export default async function PlayerDetailPage({ params, searchParams }: PagePro
 
       {(directionRows.length > 0 || contactTypeRows.length > 0) && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">打球傾向</h2>
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-lg font-semibold">打球傾向</h2>
+            <span className="text-xs text-foreground/40">※打席結果の表記から推定（種類は一部「不明」を除外）</span>
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {directionRows.length > 0 && (
               <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
