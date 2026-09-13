@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { requireAdmin } from "@/lib/auth/session";
 import { supabase } from "@/utils/supabaseClient";
 import { fetchAllRows } from "@/utils/supabaseFetchAll";
@@ -34,10 +36,10 @@ export default async function PlayersPage() {
             key={p.id}
             className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface px-4 py-3"
           >
-            <span className="text-sm font-medium">
+            <Link href={`/players/${p.id}`} className="text-sm font-medium hover:underline">
               {p.number != null ? `${p.number} ` : ""}
               {p.name}
-            </span>
+            </Link>
             <GuestToggle playerId={p.id} isGuest={p.is_guest} />
           </div>
         ))}

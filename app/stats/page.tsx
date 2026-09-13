@@ -381,7 +381,11 @@ export default async function StatsPage({ searchParams }: PageProps) {
                     </tr>
                   )}
                   <tr className={`border-t border-border-subtle ${qualified ? "" : "text-foreground/50"}`}>
-                    <td className="px-3 py-2 text-left font-medium">{player.name}</td>
+                    <td className="px-3 py-2 text-left font-medium">
+                      <Link href={`/players/${player.id}`} className="hover:underline">
+                        {player.name}
+                      </Link>
+                    </td>
                     <td className="px-3 py-2">{gamesPlayed}</td>
                     <td className="px-3 py-2">{calc.pa}</td>
                     <td className="px-3 py-2">{calc.ab}</td>
@@ -465,7 +469,11 @@ export default async function StatsPage({ searchParams }: PageProps) {
                     </tr>
                   )}
                   <tr className={`border-t border-border-subtle ${qualified ? "" : "text-foreground/50"}`}>
-                    <td className="px-3 py-2 text-left font-medium">{player.name}</td>
+                    <td className="px-3 py-2 text-left font-medium">
+                      <Link href={`/players/${player.id}`} className="hover:underline">
+                        {player.name}
+                      </Link>
+                    </td>
                     <td className="px-3 py-2">{calc.games}</td>
                     <td className="px-3 py-2">{calc.starts}</td>
                     <td className="px-3 py-2">{calc.wins}</td>
@@ -518,7 +526,11 @@ export default async function StatsPage({ searchParams }: PageProps) {
             <tbody>
               {fieldingResults.map(({ player, calc }) => (
                 <tr key={player.id} className="border-t border-border-subtle">
-                  <td className="px-3 py-2 text-left font-medium">{player.name}</td>
+                  <td className="px-3 py-2 text-left font-medium">
+                    <Link href={`/players/${player.id}`} className="hover:underline">
+                      {player.name}
+                    </Link>
+                  </td>
                   <td className="px-3 py-2">{calc.games}</td>
                   <td className="px-3 py-2">{calc.putout}</td>
                   <td className="px-3 py-2">{calc.assist}</td>
@@ -557,7 +569,11 @@ export default async function StatsPage({ searchParams }: PageProps) {
             <tbody>
               {supportResults.map(({ player, totals }) => (
                 <tr key={player.id} className="border-t border-border-subtle">
-                  <td className="px-3 py-2 text-left font-medium">{player.name}</td>
+                  <td className="px-3 py-2 text-left font-medium">
+                    <Link href={`/players/${player.id}`} className="hover:underline">
+                      {player.name}
+                    </Link>
+                  </td>
                   {SUPPORT_ROLES.map(({ key }) => (
                     <td key={key} className="px-3 py-2">
                       {totals[key]}
