@@ -4,7 +4,15 @@ import { useActionState } from "react";
 
 import { signIn, type LoginState } from "@/lib/auth/actions";
 
-export default function LoginForm({ next }: { next: string }) {
+type PlayerOption = { id: string; name: string; number: number | null };
+
+export default function LoginForm({
+  next,
+  players,
+}: {
+  next: string;
+  players: PlayerOption[];
+}) {
   const [state, action, pending] = useActionState<LoginState, FormData>(
     signIn,
     undefined
@@ -15,17 +23,26 @@ export default function LoginForm({ next }: { next: string }) {
       <input type="hidden" name="next" value={next} />
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="email" className="text-sm font-medium">
-          メールアドレス
+        <label htmlFor="playerId" className="text-sm font-medium">
+          選手
         </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
+        <select
+          id="playerId"
+          name="playerId"
           required
-          autoComplete="email"
+          defaultValue=""
           className="rounded-md border border-border-subtle bg-transparent px-3 py-2 text-sm outline-none focus:border-team-red"
-        />
+        >
+          <option value="" disabled>
+            選択してください
+          </option>
+          {players.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.number != null ? `${p.number} ` : ""}
+              {p.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="flex flex-col gap-1">
