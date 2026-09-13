@@ -276,7 +276,7 @@ export default async function Home() {
 
       <section className="flex flex-col gap-4">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-bold">最新の試合結果</h2>
+          <h2 className="text-lg font-bold">直近の試合結果</h2>
           <Link href="/games" className="text-sm font-medium text-team-red hover:underline">
             すべて見る →
           </Link>
