@@ -210,58 +210,36 @@ export default async function Home() {
         </div>
       </section>
 
-      {(leadingBatter || leadingPitcher || nextSchedule) && (
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {leadingBatter && (
-            <Link
-              href={`/players/${leadingBatter.id}`}
-              className="flex flex-col gap-1 rounded-xl border border-border-subtle bg-surface p-4 transition-shadow hover:shadow-md"
-            >
+      {nextSchedule && (
+        <Link
+          href="/schedule"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface p-4 transition-shadow hover:shadow-md"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex w-14 shrink-0 flex-col items-center rounded-lg bg-surface-muted py-1.5">
               <span className="text-xs font-medium text-foreground/50">
-                {currentYear}年 首位打者
+                {formatDate((nextSchedule as TeamSchedule).date).weekday}
               </span>
-              <span className="text-lg font-bold">{leadingBatter.name}</span>
-              <span className="font-mono text-2xl font-black tabular-nums text-team-red">
-                {formatAvg(leadingBatter.avg)}
+              <span className="text-base font-bold tabular-nums">
+                {formatDate((nextSchedule as TeamSchedule).date).label}
               </span>
-            </Link>
-          )}
-          {leadingPitcher && (
-            <Link
-              href={`/players/${leadingPitcher.id}`}
-              className="flex flex-col gap-1 rounded-xl border border-border-subtle bg-surface p-4 transition-shadow hover:shadow-md"
-            >
-              <span className="text-xs font-medium text-foreground/50">
-                {currentYear}年 防御率1位
-              </span>
-              <span className="text-lg font-bold">{leadingPitcher.name}</span>
-              <span className="font-mono text-2xl font-black tabular-nums text-team-red">
-                {formatRate(leadingPitcher.era)}
-              </span>
-            </Link>
-          )}
-          {nextSchedule && (
-            <Link
-              href="/schedule"
-              className="flex flex-col gap-1 rounded-xl border border-border-subtle bg-surface p-4 transition-shadow hover:shadow-md"
-            >
+            </div>
+            <div className="flex flex-col gap-0.5">
               <span className="text-xs font-medium text-foreground/50">次回の予定</span>
-              <span className="text-lg font-bold">
-                {formatDate((nextSchedule as TeamSchedule).date).label}（
-                {formatDate((nextSchedule as TeamSchedule).date).weekday}）
-              </span>
-              <span className="truncate text-sm text-foreground/70">
+              <span className="text-sm font-semibold">
                 {(nextSchedule as TeamSchedule).title}
                 {(nextSchedule as TeamSchedule).opponent
                   ? ` ・ vs ${(nextSchedule as TeamSchedule).opponent}`
                   : ""}
               </span>
-              {notRespondedCount != null && notRespondedCount > 0 && (
-                <span className="text-xs font-semibold text-loss">未回答 {notRespondedCount}人</span>
-              )}
-            </Link>
+            </div>
+          </div>
+          {notRespondedCount != null && notRespondedCount > 0 && (
+            <span className="shrink-0 text-xs font-semibold text-loss">
+              未回答 {notRespondedCount}人
+            </span>
           )}
-        </section>
+        </Link>
       )}
 
       <section className="flex flex-col gap-4">
@@ -323,6 +301,38 @@ export default async function Home() {
           </p>
         )}
       </section>
+
+      {(leadingBatter || leadingPitcher) && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-bold">{currentYear}年 シーズンリーダー</h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {leadingBatter && (
+              <Link
+                href={`/players/${leadingBatter.id}`}
+                className="flex flex-col gap-1 rounded-xl border border-border-subtle bg-surface p-4 transition-shadow hover:shadow-md"
+              >
+                <span className="text-xs font-medium text-foreground/50">首位打者</span>
+                <span className="text-lg font-bold">{leadingBatter.name}</span>
+                <span className="font-mono text-2xl font-black tabular-nums text-team-red">
+                  {formatAvg(leadingBatter.avg)}
+                </span>
+              </Link>
+            )}
+            {leadingPitcher && (
+              <Link
+                href={`/players/${leadingPitcher.id}`}
+                className="flex flex-col gap-1 rounded-xl border border-border-subtle bg-surface p-4 transition-shadow hover:shadow-md"
+              >
+                <span className="text-xs font-medium text-foreground/50">防御率1位</span>
+                <span className="text-lg font-bold">{leadingPitcher.name}</span>
+                <span className="font-mono text-2xl font-black tabular-nums text-team-red">
+                  {formatRate(leadingPitcher.era)}
+                </span>
+              </Link>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
