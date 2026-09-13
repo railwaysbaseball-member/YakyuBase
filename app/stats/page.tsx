@@ -31,38 +31,96 @@ const BATTING_SORT_COLUMNS: {
   label: string;
   defaultDir: "asc" | "desc";
   getValue: (r: BattingResultRow) => number | string;
+  higherIsBetter?: boolean;
 }[] = [
   { key: "name", label: "選手", defaultDir: "asc", getValue: (r) => r.player.name },
-  { key: "games", label: "試合", defaultDir: "desc", getValue: (r) => r.games },
-  { key: "pa", label: "打席", defaultDir: "desc", getValue: (r) => r.calc.pa },
-  { key: "ab", label: "打数", defaultDir: "desc", getValue: (r) => r.calc.ab },
-  { key: "runs", label: "得点", defaultDir: "desc", getValue: (r) => r.calc.runs },
-  { key: "hits", label: "安打", defaultDir: "desc", getValue: (r) => r.calc.hits },
-  { key: "doubles", label: "二塁打", defaultDir: "desc", getValue: (r) => r.calc.doubles },
-  { key: "triples", label: "三塁打", defaultDir: "desc", getValue: (r) => r.calc.triples },
-  { key: "hr", label: "本塁打", defaultDir: "desc", getValue: (r) => r.calc.homeruns },
-  { key: "total_bases", label: "塁打数", defaultDir: "desc", getValue: (r) => r.calc.total_bases },
-  { key: "rbi", label: "打点", defaultDir: "desc", getValue: (r) => r.calc.rbi },
-  { key: "steals", label: "盗塁", defaultDir: "desc", getValue: (r) => r.calc.steals },
-  { key: "caught_stealing", label: "盗塁死", defaultDir: "desc", getValue: (r) => r.calc.caught_stealing },
-  { key: "picked_off", label: "牽制死", defaultDir: "desc", getValue: (r) => r.calc.picked_off },
-  { key: "strikeouts", label: "三振", defaultDir: "desc", getValue: (r) => r.calc.strikeouts },
-  { key: "walks", label: "四球", defaultDir: "desc", getValue: (r) => r.calc.walks },
-  { key: "hbp", label: "死球", defaultDir: "desc", getValue: (r) => r.calc.hbp },
-  { key: "sac_bunt", label: "犠打", defaultDir: "desc", getValue: (r) => r.calc.sac_bunt },
-  { key: "sac_fly", label: "犠飛", defaultDir: "desc", getValue: (r) => r.calc.sac_fly },
-  { key: "advancing_hits", label: "進塁打", defaultDir: "desc", getValue: (r) => r.calc.advancing_hits },
-  { key: "double_plays", label: "併殺打", defaultDir: "desc", getValue: (r) => r.calc.double_plays },
-  { key: "avg", label: "打率", defaultDir: "desc", getValue: (r) => r.calc.avg },
-  { key: "obp", label: "出塁率", defaultDir: "desc", getValue: (r) => r.calc.obp },
-  { key: "slg", label: "長打率", defaultDir: "desc", getValue: (r) => r.calc.slg },
-  { key: "ops", label: "OPS", defaultDir: "desc", getValue: (r) => r.calc.ops },
-  { key: "risp", label: "得点圏", defaultDir: "desc", getValue: (r) => r.calc.risp_avg },
-  { key: "rc27", label: "RC27", defaultDir: "desc", getValue: (r) => r.calc.rc27 },
-  { key: "point", label: "POINT", defaultDir: "desc", getValue: (r) => r.point ?? -Infinity },
+  { key: "games", label: "試合", defaultDir: "desc", getValue: (r) => r.games, higherIsBetter: true },
+  { key: "pa", label: "打席", defaultDir: "desc", getValue: (r) => r.calc.pa, higherIsBetter: true },
+  { key: "ab", label: "打数", defaultDir: "desc", getValue: (r) => r.calc.ab, higherIsBetter: true },
+  { key: "runs", label: "得点", defaultDir: "desc", getValue: (r) => r.calc.runs, higherIsBetter: true },
+  { key: "hits", label: "安打", defaultDir: "desc", getValue: (r) => r.calc.hits, higherIsBetter: true },
+  { key: "doubles", label: "二塁打", defaultDir: "desc", getValue: (r) => r.calc.doubles, higherIsBetter: true },
+  { key: "triples", label: "三塁打", defaultDir: "desc", getValue: (r) => r.calc.triples, higherIsBetter: true },
+  { key: "hr", label: "本塁打", defaultDir: "desc", getValue: (r) => r.calc.homeruns, higherIsBetter: true },
+  { key: "total_bases", label: "塁打数", defaultDir: "desc", getValue: (r) => r.calc.total_bases, higherIsBetter: true },
+  { key: "rbi", label: "打点", defaultDir: "desc", getValue: (r) => r.calc.rbi, higherIsBetter: true },
+  { key: "steals", label: "盗塁", defaultDir: "desc", getValue: (r) => r.calc.steals, higherIsBetter: true },
+  { key: "caught_stealing", label: "盗塁死", defaultDir: "desc", getValue: (r) => r.calc.caught_stealing, higherIsBetter: false },
+  { key: "picked_off", label: "牽制死", defaultDir: "desc", getValue: (r) => r.calc.picked_off, higherIsBetter: false },
+  { key: "strikeouts", label: "三振", defaultDir: "desc", getValue: (r) => r.calc.strikeouts, higherIsBetter: false },
+  { key: "walks", label: "四球", defaultDir: "desc", getValue: (r) => r.calc.walks, higherIsBetter: true },
+  { key: "hbp", label: "死球", defaultDir: "desc", getValue: (r) => r.calc.hbp, higherIsBetter: true },
+  { key: "sac_bunt", label: "犠打", defaultDir: "desc", getValue: (r) => r.calc.sac_bunt, higherIsBetter: true },
+  { key: "sac_fly", label: "犠飛", defaultDir: "desc", getValue: (r) => r.calc.sac_fly, higherIsBetter: true },
+  { key: "advancing_hits", label: "進塁打", defaultDir: "desc", getValue: (r) => r.calc.advancing_hits, higherIsBetter: true },
+  { key: "double_plays", label: "併殺打", defaultDir: "desc", getValue: (r) => r.calc.double_plays, higherIsBetter: false },
+  { key: "avg", label: "打率", defaultDir: "desc", getValue: (r) => r.calc.avg, higherIsBetter: true },
+  { key: "obp", label: "出塁率", defaultDir: "desc", getValue: (r) => r.calc.obp, higherIsBetter: true },
+  { key: "slg", label: "長打率", defaultDir: "desc", getValue: (r) => r.calc.slg, higherIsBetter: true },
+  { key: "ops", label: "OPS", defaultDir: "desc", getValue: (r) => r.calc.ops, higherIsBetter: true },
+  { key: "risp", label: "得点圏", defaultDir: "desc", getValue: (r) => r.calc.risp_avg, higherIsBetter: true },
+  { key: "rc27", label: "RC27", defaultDir: "desc", getValue: (r) => r.calc.rc27, higherIsBetter: true },
+  { key: "point", label: "POINT", defaultDir: "desc", getValue: (r) => r.point ?? -Infinity, higherIsBetter: true },
 ];
 
 const BATTING_COLUMN_COUNT = BATTING_SORT_COLUMNS.length;
+
+const LEADER_CLASS = "bg-team-gold-soft font-bold text-team-gold";
+
+function computeLeaders<T>(
+  rows: T[],
+  columns: { key: string; getValue: (r: T) => number; higherIsBetter?: boolean }[]
+): Record<string, number> {
+  const leaders: Record<string, number> = {};
+  for (const col of columns) {
+    if (col.higherIsBetter == null) continue;
+    const values = rows.map((r) => col.getValue(r)).filter((v) => Number.isFinite(v));
+    if (values.length === 0) continue;
+    leaders[col.key] = col.higherIsBetter ? Math.max(...values) : Math.min(...values);
+  }
+  return leaders;
+}
+
+function isLeader(value: number, leaderValue: number | undefined): boolean {
+  return leaderValue !== undefined && Number.isFinite(value) && Math.abs(value - leaderValue) < 1e-9;
+}
+
+const PITCHING_LEADER_COLUMNS: {
+  key: string;
+  getValue: (r: { calc: ReturnType<typeof calcPitching>; point: number | null }) => number;
+  higherIsBetter: boolean;
+}[] = [
+  { key: "games", getValue: (r) => r.calc.games, higherIsBetter: true },
+  { key: "starts", getValue: (r) => r.calc.starts, higherIsBetter: true },
+  { key: "wins", getValue: (r) => r.calc.wins, higherIsBetter: true },
+  { key: "losses", getValue: (r) => r.calc.losses, higherIsBetter: false },
+  { key: "saves", getValue: (r) => r.calc.saves, higherIsBetter: true },
+  { key: "holds", getValue: (r) => r.calc.holds, higherIsBetter: true },
+  { key: "outs", getValue: (r) => r.calc.outs, higherIsBetter: true },
+  { key: "era", getValue: (r) => r.calc.era, higherIsBetter: false },
+  { key: "ra", getValue: (r) => r.calc.ra, higherIsBetter: false },
+  { key: "strikeouts", getValue: (r) => r.calc.strikeouts, higherIsBetter: true },
+  { key: "kRate", getValue: (r) => r.calc.kRate, higherIsBetter: true },
+  { key: "bbHbpRate", getValue: (r) => r.calc.bbHbpRate, higherIsBetter: false },
+  { key: "whip", getValue: (r) => r.calc.whip, higherIsBetter: false },
+  { key: "qs", getValue: (r) => r.calc.qs, higherIsBetter: true },
+  { key: "qsRate", getValue: (r) => r.calc.qsRate, higherIsBetter: true },
+  { key: "point", getValue: (r) => r.point ?? -Infinity, higherIsBetter: true },
+];
+
+const FIELDING_LEADER_COLUMNS: {
+  key: string;
+  getValue: (r: { calc: ReturnType<typeof calcFielding> }) => number;
+  higherIsBetter: boolean;
+}[] = [
+  { key: "games", getValue: (r) => r.calc.games, higherIsBetter: true },
+  { key: "putout", getValue: (r) => r.calc.putout, higherIsBetter: true },
+  { key: "assist", getValue: (r) => r.calc.assist, higherIsBetter: true },
+  { key: "error", getValue: (r) => r.calc.error, higherIsBetter: false },
+  { key: "beauty", getValue: (r) => r.calc.beauty, higherIsBetter: true },
+  { key: "rarePlay", getValue: (r) => r.calc.rarePlay, higherIsBetter: true },
+  { key: "fieldingPct", getValue: (r) => r.calc.fieldingPct, higherIsBetter: true },
+];
 
 type PlayerRow = {
   id: string;
@@ -245,6 +303,10 @@ export default async function StatsPage({ searchParams }: PageProps) {
         return b.calc.avg - a.calc.avg;
       });
   const battingQualifiedCount = battingSortColumn ? 0 : battingResults.filter((r) => r.qualified).length;
+  const battingLeaders = computeLeaders(
+    battingResultsBase.filter((r) => r.qualified),
+    BATTING_SORT_COLUMNS as { key: string; getValue: (r: BattingResultRow) => number; higherIsBetter?: boolean }[]
+  );
 
   function battingSortHref(col: (typeof BATTING_SORT_COLUMNS)[number]): string {
     const nextDir =
@@ -276,6 +338,10 @@ export default async function StatsPage({ searchParams }: PageProps) {
       return a.calc.era - b.calc.era;
     });
   const pitchingQualifiedCount = pitchingResults.filter((r) => r.qualified).length;
+  const pitchingLeaders = computeLeaders(
+    pitchingResults.filter((r) => r.qualified),
+    PITCHING_LEADER_COLUMNS
+  );
 
   const fieldingResults = playerList
     .map((player) => {
@@ -287,6 +353,7 @@ export default async function StatsPage({ searchParams }: PageProps) {
     })
     .filter((v): v is NonNullable<typeof v> => v !== null)
     .sort((a, b) => b.calc.chances - a.calc.chances);
+  const fieldingLeaders = computeLeaders(fieldingResults, FIELDING_LEADER_COLUMNS);
 
   const supportResults = playerList
     .map((player) => {
@@ -306,6 +373,14 @@ export default async function StatsPage({ searchParams }: PageProps) {
     })
     .filter((v): v is NonNullable<typeof v> => v !== null)
     .sort((a, b) => b.grandTotal - a.grandTotal);
+  const supportLeaders = computeLeaders(
+    supportResults,
+    SUPPORT_ROLES.map(({ key }) => ({
+      key,
+      getValue: (r: (typeof supportResults)[number]) => r.totals[key],
+      higherIsBetter: true,
+    }))
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8">
@@ -386,33 +461,33 @@ export default async function StatsPage({ searchParams }: PageProps) {
                         {player.name}
                       </Link>
                     </td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{gamesPlayed}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.pa}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.ab}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.runs}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.hits}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.doubles}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.triples}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.homeruns}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.total_bases}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.rbi}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.steals}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.caught_stealing}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.picked_off}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.strikeouts}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.walks}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.hbp}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.sac_bunt}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.sac_fly}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.advancing_hits}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.double_plays}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatAvg(calc.avg)}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatAvg(calc.obp)}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatAvg(calc.slg)}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatAvg(calc.ops)}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatAvg(calc.risp_avg)}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.rc27.toFixed(2)}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{point ?? "-"}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(gamesPlayed, battingLeaders.games) ? LEADER_CLASS : ""}`}>{gamesPlayed}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.pa, battingLeaders.pa) ? LEADER_CLASS : ""}`}>{calc.pa}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.ab, battingLeaders.ab) ? LEADER_CLASS : ""}`}>{calc.ab}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.runs, battingLeaders.runs) ? LEADER_CLASS : ""}`}>{calc.runs}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.hits, battingLeaders.hits) ? LEADER_CLASS : ""}`}>{calc.hits}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.doubles, battingLeaders.doubles) ? LEADER_CLASS : ""}`}>{calc.doubles}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.triples, battingLeaders.triples) ? LEADER_CLASS : ""}`}>{calc.triples}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.homeruns, battingLeaders.hr) ? LEADER_CLASS : ""}`}>{calc.homeruns}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.total_bases, battingLeaders.total_bases) ? LEADER_CLASS : ""}`}>{calc.total_bases}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.rbi, battingLeaders.rbi) ? LEADER_CLASS : ""}`}>{calc.rbi}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.steals, battingLeaders.steals) ? LEADER_CLASS : ""}`}>{calc.steals}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.caught_stealing, battingLeaders.caught_stealing) ? LEADER_CLASS : ""}`}>{calc.caught_stealing}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.picked_off, battingLeaders.picked_off) ? LEADER_CLASS : ""}`}>{calc.picked_off}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.strikeouts, battingLeaders.strikeouts) ? LEADER_CLASS : ""}`}>{calc.strikeouts}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.walks, battingLeaders.walks) ? LEADER_CLASS : ""}`}>{calc.walks}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.hbp, battingLeaders.hbp) ? LEADER_CLASS : ""}`}>{calc.hbp}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.sac_bunt, battingLeaders.sac_bunt) ? LEADER_CLASS : ""}`}>{calc.sac_bunt}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.sac_fly, battingLeaders.sac_fly) ? LEADER_CLASS : ""}`}>{calc.sac_fly}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.advancing_hits, battingLeaders.advancing_hits) ? LEADER_CLASS : ""}`}>{calc.advancing_hits}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.double_plays, battingLeaders.double_plays) ? LEADER_CLASS : ""}`}>{calc.double_plays}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.avg, battingLeaders.avg) ? LEADER_CLASS : ""}`}>{formatAvg(calc.avg)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.obp, battingLeaders.obp) ? LEADER_CLASS : ""}`}>{formatAvg(calc.obp)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.slg, battingLeaders.slg) ? LEADER_CLASS : ""}`}>{formatAvg(calc.slg)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.ops, battingLeaders.ops) ? LEADER_CLASS : ""}`}>{formatAvg(calc.ops)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.risp_avg, battingLeaders.risp) ? LEADER_CLASS : ""}`}>{formatAvg(calc.risp_avg)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.rc27, battingLeaders.rc27) ? LEADER_CLASS : ""}`}>{calc.rc27.toFixed(2)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(point ?? -Infinity, battingLeaders.point) ? LEADER_CLASS : ""}`}>{point ?? "-"}</td>
                   </tr>
                 </Fragment>
               ))}
@@ -474,24 +549,24 @@ export default async function StatsPage({ searchParams }: PageProps) {
                         {player.name}
                       </Link>
                     </td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.games}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.starts}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.wins}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.losses}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.saves}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.holds}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatInnings(calc.outs)}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatRate(calc.era)}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatRate(calc.ra)}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.strikeouts}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatRate(calc.kRate)}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatRate(calc.bbHbpRate)}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatRate(calc.whip)}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.qs}</td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.games, pitchingLeaders.games) ? LEADER_CLASS : ""}`}>{calc.games}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.starts, pitchingLeaders.starts) ? LEADER_CLASS : ""}`}>{calc.starts}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.wins, pitchingLeaders.wins) ? LEADER_CLASS : ""}`}>{calc.wins}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.losses, pitchingLeaders.losses) ? LEADER_CLASS : ""}`}>{calc.losses}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.saves, pitchingLeaders.saves) ? LEADER_CLASS : ""}`}>{calc.saves}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.holds, pitchingLeaders.holds) ? LEADER_CLASS : ""}`}>{calc.holds}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.outs, pitchingLeaders.outs) ? LEADER_CLASS : ""}`}>{formatInnings(calc.outs)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.era, pitchingLeaders.era) ? LEADER_CLASS : ""}`}>{formatRate(calc.era)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.ra, pitchingLeaders.ra) ? LEADER_CLASS : ""}`}>{formatRate(calc.ra)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.strikeouts, pitchingLeaders.strikeouts) ? LEADER_CLASS : ""}`}>{calc.strikeouts}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.kRate, pitchingLeaders.kRate) ? LEADER_CLASS : ""}`}>{formatRate(calc.kRate)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.bbHbpRate, pitchingLeaders.bbHbpRate) ? LEADER_CLASS : ""}`}>{formatRate(calc.bbHbpRate)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.whip, pitchingLeaders.whip) ? LEADER_CLASS : ""}`}>{formatRate(calc.whip)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.qs, pitchingLeaders.qs) ? LEADER_CLASS : ""}`}>{calc.qs}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.qsRate, pitchingLeaders.qsRate) ? LEADER_CLASS : ""}`}>
                       {calc.starts > 0 ? `${calc.qsRate.toFixed(1)}%` : "-"}
                     </td>
-                    <td className="px-1 py-1 sm:px-3 sm:py-2">{point ?? "-"}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(point ?? -Infinity, pitchingLeaders.point) ? LEADER_CLASS : ""}`}>{point ?? "-"}</td>
                   </tr>
                 </Fragment>
               ))}
@@ -531,13 +606,13 @@ export default async function StatsPage({ searchParams }: PageProps) {
                       {player.name}
                     </Link>
                   </td>
-                  <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.games}</td>
-                  <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.putout}</td>
-                  <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.assist}</td>
-                  <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.error}</td>
-                  <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.beauty}</td>
-                  <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.rarePlay}</td>
-                  <td className="px-1 py-1 sm:px-3 sm:py-2">{formatAvg(calc.fieldingPct)}</td>
+                  <td className={`px-1 py-1 sm:px-3 sm:py-2 ${isLeader(calc.games, fieldingLeaders.games) ? LEADER_CLASS : ""}`}>{calc.games}</td>
+                  <td className={`px-1 py-1 sm:px-3 sm:py-2 ${isLeader(calc.putout, fieldingLeaders.putout) ? LEADER_CLASS : ""}`}>{calc.putout}</td>
+                  <td className={`px-1 py-1 sm:px-3 sm:py-2 ${isLeader(calc.assist, fieldingLeaders.assist) ? LEADER_CLASS : ""}`}>{calc.assist}</td>
+                  <td className={`px-1 py-1 sm:px-3 sm:py-2 ${isLeader(calc.error, fieldingLeaders.error) ? LEADER_CLASS : ""}`}>{calc.error}</td>
+                  <td className={`px-1 py-1 sm:px-3 sm:py-2 ${isLeader(calc.beauty, fieldingLeaders.beauty) ? LEADER_CLASS : ""}`}>{calc.beauty}</td>
+                  <td className={`px-1 py-1 sm:px-3 sm:py-2 ${isLeader(calc.rarePlay, fieldingLeaders.rarePlay) ? LEADER_CLASS : ""}`}>{calc.rarePlay}</td>
+                  <td className={`px-1 py-1 sm:px-3 sm:py-2 ${isLeader(calc.fieldingPct, fieldingLeaders.fieldingPct) ? LEADER_CLASS : ""}`}>{formatAvg(calc.fieldingPct)}</td>
                 </tr>
               ))}
               {fieldingResults.length === 0 && (
@@ -575,7 +650,10 @@ export default async function StatsPage({ searchParams }: PageProps) {
                     </Link>
                   </td>
                   {SUPPORT_ROLES.map(({ key }) => (
-                    <td key={key} className="px-1 py-1 sm:px-3 sm:py-2">
+                    <td
+                      key={key}
+                      className={`px-1 py-1 sm:px-3 sm:py-2 ${isLeader(totals[key], supportLeaders[key]) ? LEADER_CLASS : ""}`}
+                    >
                       {totals[key]}
                     </td>
                   ))}
