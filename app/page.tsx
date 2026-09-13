@@ -210,36 +210,62 @@ export default async function Home() {
         </div>
       </section>
 
-      {nextSchedule && (
-        <Link
-          href="/schedule"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface p-4 transition-shadow hover:shadow-md"
-        >
-          <div className="flex items-center gap-4">
-            <div className="flex w-14 shrink-0 flex-col items-center rounded-lg bg-surface-muted py-1.5">
-              <span className="text-xs font-medium text-foreground/50">
-                {formatDate((nextSchedule as TeamSchedule).date).weekday}
-              </span>
-              <span className="text-base font-bold tabular-nums">
-                {formatDate((nextSchedule as TeamSchedule).date).label}
-              </span>
-            </div>
-            <div className="flex flex-col gap-0.5">
+      {(nextSchedule || rows[0]) && (
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {nextSchedule && (
+            <Link
+              href="/schedule"
+              className="flex flex-col gap-1 rounded-xl border border-border-subtle bg-surface p-4 transition-shadow hover:shadow-md"
+            >
               <span className="text-xs font-medium text-foreground/50">次回の予定</span>
-              <span className="text-sm font-semibold">
+              <span className="text-lg font-bold">
+                {formatDate((nextSchedule as TeamSchedule).date).label}（
+                {formatDate((nextSchedule as TeamSchedule).date).weekday}）
+              </span>
+              <span className="truncate text-sm text-foreground/70">
                 {(nextSchedule as TeamSchedule).title}
                 {(nextSchedule as TeamSchedule).opponent
                   ? ` ・ vs ${(nextSchedule as TeamSchedule).opponent}`
                   : ""}
               </span>
-            </div>
-          </div>
-          {notRespondedCount != null && notRespondedCount > 0 && (
-            <span className="shrink-0 text-xs font-semibold text-loss">
-              未回答 {notRespondedCount}人
-            </span>
+              {notRespondedCount != null && notRespondedCount > 0 && (
+                <span className="text-xs font-semibold text-loss">未回答 {notRespondedCount}人</span>
+              )}
+            </Link>
           )}
-        </Link>
+          {rows[0] &&
+            (() => {
+              const latest = rows[0];
+              const total = latest.scoreboard?.total;
+              const result = resultOf(latest);
+              return (
+                <Link
+                  href={`/games/${latest.id}`}
+                  className="flex flex-col gap-1 rounded-xl border border-border-subtle bg-surface p-4 transition-shadow hover:shadow-md"
+                >
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-xs font-medium text-foreground/50">最新の試合結果</span>
+                    {result && (
+                      <span className={`rounded px-1.5 py-0.5 text-xs font-bold ${RESULT_CLASS[result]}`}>
+                        {RESULT_LABEL[result]}
+                      </span>
+                    )}
+                  </div>
+                  <span className="truncate text-lg font-bold">vs {latest.opponent}</span>
+                  <div className="flex items-baseline justify-between">
+                    {total && (
+                      <span className="font-mono text-2xl font-black tabular-nums text-team-red">
+                        {total.team}
+                        <span className="mx-0.5 text-foreground/30">-</span>
+                        {total.opponent}
+                      </span>
+                    )}
+                    <span className="text-xs text-foreground/50">{latest.date}</span>
+                  </div>
+                </Link>
+              );
+            })()}
+        </section>
       )}
 
       <section className="flex flex-col gap-4">
