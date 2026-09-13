@@ -32,6 +32,14 @@ export default async function AuthNav() {
           選手管理
         </Link>
       )}
+      {player.is_admin && (
+        <Link
+          href="/admin/season-parameters"
+          className="font-medium text-foreground/60 transition-colors hover:text-foreground"
+        >
+          年度設定
+        </Link>
+      )}
       <form action={signOut}>
         <button
           type="submit"
