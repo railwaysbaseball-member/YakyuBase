@@ -3,8 +3,6 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
-import { createAdminClient } from "@/utils/supabase/admin";
-import { supabase as anonSupabase } from "@/utils/supabaseClient";
 
 export type LoginState = { error: string } | undefined;
 
@@ -20,28 +18,18 @@ export async function signIn(
     return { error: "選手とパスワードを入力してください。" };
   }
 
-  const { data: player, error: playerError } = await anonSupabase
-    .from("players")
-    .select("user_id")
-    .eq("id", playerId)
-    .maybeSingle();
-  if (playerError || !player?.user_id) {
-    return { error: "選手またはパスワードが正しくありません。" };
-  }
-
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error("SUPABASE_SERVICE_ROLE_KEY が未設定のためログインできません。");
-    return { error: "ログイン機能が設定されていません。管理者に連絡してください。" };
-  }
-
-  const admin = createAdminClient();
-  const { data: userData, error: userError } = await admin.auth.admin.getUserById(player.user_id);
-  const email = userData?.user?.email;
-  if (userError || !email) {
-    return { error: "選手またはパスワードが正しくありません。" };
-  }
-
   const supabase = await createClient();
+
+  // player_id -> メールアドレスの解決は、anon から実行できる SECURITY
+  // DEFINER 関数（supabase/migrations/0009）越しに行う。service_role
+  // キーは使わない（supabase/README.md の運用方針）。
+  const { data: email, error: emailError } = await supabase.rpc("player_login_email", {
+    p_player_id: playerId,
+  });
+  if (emailError || !email) {
+    return { error: "選手またはパスワードが正しくありません。" };
+  }
+
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
