@@ -7,6 +7,7 @@ import { createClient as createServerClient } from "@/utils/supabase/server";
 import { fetchAllRows } from "@/utils/supabaseFetchAll";
 import type { TeamSchedule } from "@/types/schedule";
 import AttendanceForm from "../AttendanceForm";
+import DeleteScheduleButton from "./DeleteScheduleButton";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -72,9 +73,22 @@ export default async function ScheduleDetailPage({ params }: PageProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10">
-      <Link href="/schedule" className="text-sm text-foreground/50 hover:text-foreground">
-        ← スケジュールに戻る
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link href="/schedule" className="text-sm text-foreground/50 hover:text-foreground">
+          ← スケジュールに戻る
+        </Link>
+        {player?.is_admin && (
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/schedule/${id}/edit`}
+              className="rounded-md border border-border-subtle px-3 py-1.5 text-sm font-medium text-foreground/70 hover:bg-surface-muted"
+            >
+              編集
+            </Link>
+            <DeleteScheduleButton scheduleId={id} />
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-surface p-5">
         <div className="flex items-start gap-4">
