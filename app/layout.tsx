@@ -64,12 +64,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </Suspense>
           </div>
 
-          <nav className="flex items-center gap-1 overflow-x-auto border-t border-border-subtle px-4 py-1.5 sm:hidden">
+          <nav className="flex items-center justify-between gap-0.5 overflow-x-auto border-t border-border-subtle px-2 py-1.5 sm:hidden">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="shrink-0 rounded-md px-3 py-1 text-sm font-medium text-foreground/70 hover:bg-surface-muted hover:text-foreground"
+                className="shrink-0 rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap text-foreground/70 hover:bg-surface-muted hover:text-foreground"
               >
                 {link.label}
               </Link>
