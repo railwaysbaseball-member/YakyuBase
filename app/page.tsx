@@ -185,17 +185,16 @@ export default async function Home() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-10">
-      <section className="flex flex-col gap-3 rounded-2xl bg-gradient-to-br from-team-red to-team-red-bright px-6 py-10 text-white sm:px-10">
-        <span className="text-sm font-semibold tracking-wide text-white/70">
-          RAILWAYS BASEBALL CLUB
-        </span>
-        <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
-          レールウェイズ 成績管理
-        </h1>
-        <p className="max-w-xl text-sm text-white/80">
-          草野球チーム「レールウェイズ」の打撃・投手・守備成績、試合結果をまとめています。
-        </p>
-        <div className="mt-2 flex flex-wrap gap-3">
+      <section className="flex flex-col gap-2 rounded-2xl bg-gradient-to-br from-team-red to-team-red-bright px-6 py-5 text-white sm:px-8 sm:py-6">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h1 className="text-xl font-black tracking-tight sm:text-2xl">
+            レールウェイズ 成績管理
+          </h1>
+          <span className="text-xs font-semibold tracking-wide text-white/70">
+            RAILWAYS BASEBALL CLUB
+          </span>
+        </div>
+        <div className="mt-1 flex flex-wrap gap-3">
           <Link
             href="/games"
             className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-team-red transition-colors hover:bg-white/90"
