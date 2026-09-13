@@ -149,36 +149,36 @@ export default async function GameDetailPage({ params }: PageProps) {
       </div>
 
       <section className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
-        <table className="w-full min-w-max text-center text-sm tabular-nums">
+        <table className="w-full min-w-max text-center text-[10px] sm:text-sm tabular-nums">
           <thead className="bg-surface-muted">
             <tr>
-              <th className="px-3 py-2 text-left font-medium text-foreground/50"></th>
+              <th className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium text-foreground/50"></th>
               {g.scoreboard.innings.team.map((_, i) => (
-                <th key={i} className="px-3 py-2 font-medium text-foreground/50">
+                <th key={i} className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">
                   {i + 1}
                 </th>
               ))}
-              <th className="px-3 py-2 font-bold">R</th>
+              <th className="px-1 py-1 sm:px-3 sm:py-2 font-bold">R</th>
             </tr>
           </thead>
           <tbody>
             <tr className="border-t border-border-subtle">
-              <td className="px-3 py-2 text-left font-semibold text-team-red">レールウェイズ</td>
+              <td className="px-1 py-1 sm:px-3 sm:py-2 text-left font-semibold text-team-red">レールウェイズ</td>
               {g.scoreboard.innings.team.map((s, i) => (
-                <td key={i} className="px-3 py-2">
+                <td key={i} className="px-1 py-1 sm:px-3 sm:py-2">
                   {s ?? ""}
                 </td>
               ))}
-              <td className="px-3 py-2 text-base font-bold">{total.team}</td>
+              <td className="px-1 py-1 sm:px-3 sm:py-2 text-base font-bold">{total.team}</td>
             </tr>
             <tr className="border-t border-border-subtle">
-              <td className="px-3 py-2 text-left font-semibold">{g.opponent}</td>
+              <td className="px-1 py-1 sm:px-3 sm:py-2 text-left font-semibold">{g.opponent}</td>
               {g.scoreboard.innings.opponent.map((s, i) => (
-                <td key={i} className="px-3 py-2">
+                <td key={i} className="px-1 py-1 sm:px-3 sm:py-2">
                   {s ?? ""}
                 </td>
               ))}
-              <td className="px-3 py-2 text-base font-bold">{total.opponent}</td>
+              <td className="px-1 py-1 sm:px-3 sm:py-2 text-base font-bold">{total.opponent}</td>
             </tr>
           </tbody>
         </table>
@@ -187,23 +187,23 @@ export default async function GameDetailPage({ params }: PageProps) {
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-bold">打者成績</h2>
         <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
-          <table className="w-full min-w-max text-center text-sm tabular-nums">
+          <table className="w-full min-w-max text-center text-[10px] sm:text-sm tabular-nums">
             <thead className="bg-surface-muted">
               <tr>
-                <th className="px-2 py-2 font-medium text-foreground/50">打順</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">守備</th>
-                <th className="px-3 py-2 text-left font-medium text-foreground/50">選手名</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">打順</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">守備</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium text-foreground/50">選手名</th>
                 {inningColumns.map((inn, i) => (
-                  <th key={i} className="px-2 py-2 font-medium text-foreground/50">
+                  <th key={i} className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">
                     {inn}
                   </th>
                 ))}
-                <th className="px-2 py-2 font-medium text-foreground/50">打席</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">打数</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">安打</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">得点</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">打点</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">盗塁</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">打席</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">打数</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">安打</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">得点</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">打点</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">盗塁</th>
               </tr>
             </thead>
             <tbody>
@@ -218,9 +218,9 @@ export default async function GameDetailPage({ params }: PageProps) {
 
                 return (
                   <tr key={b.id} className="border-t border-border-subtle">
-                    <td className="px-2 py-2">{b.order_no}</td>
-                    <td className="px-2 py-2 text-xs text-foreground/60">{b.position ?? ""}</td>
-                    <td className="px-3 py-2 text-left font-medium">{b.players?.name}</td>
+                    <td className="px-0.5 py-1 sm:px-2 sm:py-2">{b.order_no}</td>
+                    <td className="px-0.5 py-1 sm:px-2 sm:py-2 text-xs text-foreground/60">{b.position ?? ""}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium">{b.players?.name}</td>
 
                     {inningColumns.map((inn, colIdx) => {
                       const usedCount = consumed.get(inn) ?? 0;
@@ -230,9 +230,9 @@ export default async function GameDetailPage({ params }: PageProps) {
                       if (!pr) return <td key={colIdx}></td>;
 
                       return (
-                        <td key={colIdx} className="px-1 py-1.5">
+                        <td key={colIdx} className="px-0.5 py-1 sm:px-1 sm:py-1.5">
                           <span
-                            className={`inline-block rounded px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap ${resultClass(pr.result)}`}
+                            className={`inline-block rounded px-1 py-0.5 text-[9px] font-semibold whitespace-nowrap sm:px-1.5 sm:text-xs ${resultClass(pr.result)}`}
                           >
                             {pr.result}
                             {pr.rbi ? `(${pr.rbi})` : ""}
@@ -242,12 +242,12 @@ export default async function GameDetailPage({ params }: PageProps) {
                       );
                     })}
 
-                    <td className="px-2 py-2">{b.plate_appearances}</td>
-                    <td className="px-2 py-2">{b.at_bats}</td>
-                    <td className="px-2 py-2">{b.hits}</td>
-                    <td className="px-2 py-2">{b.runs}</td>
-                    <td className="px-2 py-2">{b.rbi}</td>
-                    <td className="px-2 py-2">{b.steals}</td>
+                    <td className="px-0.5 py-1 sm:px-2 sm:py-2">{b.plate_appearances}</td>
+                    <td className="px-0.5 py-1 sm:px-2 sm:py-2">{b.at_bats}</td>
+                    <td className="px-0.5 py-1 sm:px-2 sm:py-2">{b.hits}</td>
+                    <td className="px-0.5 py-1 sm:px-2 sm:py-2">{b.runs}</td>
+                    <td className="px-0.5 py-1 sm:px-2 sm:py-2">{b.rbi}</td>
+                    <td className="px-0.5 py-1 sm:px-2 sm:py-2">{b.steals}</td>
                   </tr>
                 );
               })}
@@ -259,42 +259,42 @@ export default async function GameDetailPage({ params }: PageProps) {
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-bold">投手成績</h2>
         <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
-          <table className="w-full min-w-max text-center text-sm tabular-nums">
+          <table className="w-full min-w-max text-center text-[10px] sm:text-sm tabular-nums">
             <thead className="bg-surface-muted">
               <tr>
-                <th className="px-3 py-2 text-left font-medium text-foreground/50">選手</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">投球回</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">自責点</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">失点</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">打者数</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">奪三振</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">四球</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">死球</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">被安打</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">被本打</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">投球数</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">暴投</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">ボーク</th>
-                <th className="px-2 py-2 font-medium text-foreground/50">勝敗</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium text-foreground/50">選手</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">投球回</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">自責点</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">失点</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">打者数</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">奪三振</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">四球</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">死球</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">被安打</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">被本打</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">投球数</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">暴投</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">ボーク</th>
+                <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">勝敗</th>
               </tr>
             </thead>
             <tbody>
               {pitching.map((p) => (
                 <tr key={p.id} className="border-t border-border-subtle">
-                  <td className="px-3 py-2 text-left font-medium">{p.players?.name}</td>
-                  <td className="px-2 py-2">{p.innings}</td>
-                  <td className="px-2 py-2">{p.er ?? 0}</td>
-                  <td className="px-2 py-2">{p.runs}</td>
-                  <td className="px-2 py-2">{p.batters_faced}</td>
-                  <td className="px-2 py-2">{p.strikeouts}</td>
-                  <td className="px-2 py-2">{p.walks}</td>
-                  <td className="px-2 py-2">{p.hbp}</td>
-                  <td className="px-2 py-2">{p.hits_allowed}</td>
-                  <td className="px-2 py-2">{p.hr_allowed}</td>
-                  <td className="px-2 py-2">{p.pitches}</td>
-                  <td className="px-2 py-2">{p.wp}</td>
-                  <td className="px-2 py-2">{p.balk}</td>
-                  <td className="px-2 py-2 font-semibold">{p.decision ?? ""}</td>
+                  <td className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium">{p.players?.name}</td>
+                  <td className="px-0.5 py-1 sm:px-2 sm:py-2">{p.innings}</td>
+                  <td className="px-0.5 py-1 sm:px-2 sm:py-2">{p.er ?? 0}</td>
+                  <td className="px-0.5 py-1 sm:px-2 sm:py-2">{p.runs}</td>
+                  <td className="px-0.5 py-1 sm:px-2 sm:py-2">{p.batters_faced}</td>
+                  <td className="px-0.5 py-1 sm:px-2 sm:py-2">{p.strikeouts}</td>
+                  <td className="px-0.5 py-1 sm:px-2 sm:py-2">{p.walks}</td>
+                  <td className="px-0.5 py-1 sm:px-2 sm:py-2">{p.hbp}</td>
+                  <td className="px-0.5 py-1 sm:px-2 sm:py-2">{p.hits_allowed}</td>
+                  <td className="px-0.5 py-1 sm:px-2 sm:py-2">{p.hr_allowed}</td>
+                  <td className="px-0.5 py-1 sm:px-2 sm:py-2">{p.pitches}</td>
+                  <td className="px-0.5 py-1 sm:px-2 sm:py-2">{p.wp}</td>
+                  <td className="px-0.5 py-1 sm:px-2 sm:py-2">{p.balk}</td>
+                  <td className="px-0.5 py-1 sm:px-2 sm:py-2 font-semibold">{p.decision ?? ""}</td>
                 </tr>
               ))}
             </tbody>
@@ -306,26 +306,26 @@ export default async function GameDetailPage({ params }: PageProps) {
         <section className="flex flex-col gap-3">
           <h2 className="text-lg font-bold">守備成績</h2>
           <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
-            <table className="w-full min-w-max text-center text-sm tabular-nums">
+            <table className="w-full min-w-max text-center text-[10px] sm:text-sm tabular-nums">
               <thead className="bg-surface-muted">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium text-foreground/50">選手</th>
-                  <th className="px-2 py-2 font-medium text-foreground/50">刺殺</th>
-                  <th className="px-2 py-2 font-medium text-foreground/50">補殺</th>
-                  <th className="px-2 py-2 font-medium text-foreground/50">失策</th>
-                  <th className="px-2 py-2 font-medium text-foreground/50">美技</th>
-                  <th className="px-2 py-2 font-medium text-foreground/50">珍技</th>
+                  <th className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium text-foreground/50">選手</th>
+                  <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">刺殺</th>
+                  <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">補殺</th>
+                  <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">失策</th>
+                  <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">美技</th>
+                  <th className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">珍技</th>
                 </tr>
               </thead>
               <tbody>
                 {fielding.map((f) => (
                   <tr key={f.id} className="border-t border-border-subtle">
-                    <td className="px-3 py-2 text-left font-medium">{f.players?.name}</td>
-                    <td className="px-2 py-2">{f.putout}</td>
-                    <td className="px-2 py-2">{f.assist}</td>
-                    <td className="px-2 py-2">{f.error}</td>
-                    <td className="px-2 py-2">{f.beauty}</td>
-                    <td className="px-2 py-2">{f.rare_play}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium">{f.players?.name}</td>
+                    <td className="px-0.5 py-1 sm:px-2 sm:py-2">{f.putout}</td>
+                    <td className="px-0.5 py-1 sm:px-2 sm:py-2">{f.assist}</td>
+                    <td className="px-0.5 py-1 sm:px-2 sm:py-2">{f.error}</td>
+                    <td className="px-0.5 py-1 sm:px-2 sm:py-2">{f.beauty}</td>
+                    <td className="px-0.5 py-1 sm:px-2 sm:py-2">{f.rare_play}</td>
                   </tr>
                 ))}
               </tbody>
@@ -338,12 +338,12 @@ export default async function GameDetailPage({ params }: PageProps) {
         <section className="flex flex-col gap-3">
           <h2 className="text-lg font-bold">サポート実績</h2>
           <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
-            <table className="w-full min-w-max text-center text-sm tabular-nums">
+            <table className="w-full min-w-max text-center text-[10px] sm:text-sm tabular-nums">
               <thead className="bg-surface-muted">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium text-foreground/50">選手</th>
+                  <th className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium text-foreground/50">選手</th>
                   {SUPPORT_ROLES.map(({ key, label }) => (
-                    <th key={key} className="px-2 py-2 font-medium text-foreground/50">
+                    <th key={key} className="px-0.5 py-1 sm:px-2 sm:py-2 font-medium text-foreground/50">
                       {label}
                     </th>
                   ))}
@@ -352,9 +352,9 @@ export default async function GameDetailPage({ params }: PageProps) {
               <tbody>
                 {support.map((s) => (
                   <tr key={s.id} className="border-t border-border-subtle">
-                    <td className="px-3 py-2 text-left font-medium">{s.players?.name}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium">{s.players?.name}</td>
                     {SUPPORT_ROLES.map(({ key }) => (
-                      <td key={key} className="px-2 py-2">
+                      <td key={key} className="px-0.5 py-1 sm:px-2 sm:py-2">
                         {s[key] ? "○" : ""}
                       </td>
                     ))}

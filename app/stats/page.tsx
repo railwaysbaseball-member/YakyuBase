@@ -346,13 +346,13 @@ export default async function StatsPage({ searchParams }: PageProps) {
           </span>
         </div>
         <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
-          <table className="w-full min-w-max text-right text-sm tabular-nums">
+          <table className="w-full min-w-max text-right text-[10px] sm:text-sm tabular-nums">
             <thead className="bg-surface-muted">
               <tr>
                 {BATTING_SORT_COLUMNS.map((col) => (
                   <th
                     key={col.key}
-                    className={`px-3 py-2 font-medium text-foreground/50 ${col.key === "name" ? "text-left" : ""}`}
+                    className={`px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50 ${col.key === "name" ? "text-left" : ""}`}
                   >
                     <Link
                       href={battingSortHref(col)}
@@ -374,45 +374,45 @@ export default async function StatsPage({ searchParams }: PageProps) {
                     <tr key="divider">
                       <td
                         colSpan={BATTING_COLUMN_COUNT}
-                        className="border-t border-border-subtle bg-surface-muted px-3 py-1 text-left text-xs text-foreground/50"
+                        className="border-t border-border-subtle bg-surface-muted px-1 py-1 sm:px-3 text-left text-[10px] sm:text-xs text-foreground/50"
                       >
                         規定打席未満
                       </td>
                     </tr>
                   )}
                   <tr className={`border-t border-border-subtle ${qualified ? "" : "text-foreground/50"}`}>
-                    <td className="px-3 py-2 text-left font-medium">
+                    <td className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium">
                       <Link href={`/players/${player.id}`} className="hover:underline">
                         {player.name}
                       </Link>
                     </td>
-                    <td className="px-3 py-2">{gamesPlayed}</td>
-                    <td className="px-3 py-2">{calc.pa}</td>
-                    <td className="px-3 py-2">{calc.ab}</td>
-                    <td className="px-3 py-2">{calc.runs}</td>
-                    <td className="px-3 py-2">{calc.hits}</td>
-                    <td className="px-3 py-2">{calc.doubles}</td>
-                    <td className="px-3 py-2">{calc.triples}</td>
-                    <td className="px-3 py-2">{calc.homeruns}</td>
-                    <td className="px-3 py-2">{calc.total_bases}</td>
-                    <td className="px-3 py-2">{calc.rbi}</td>
-                    <td className="px-3 py-2">{calc.steals}</td>
-                    <td className="px-3 py-2">{calc.caught_stealing}</td>
-                    <td className="px-3 py-2">{calc.picked_off}</td>
-                    <td className="px-3 py-2">{calc.strikeouts}</td>
-                    <td className="px-3 py-2">{calc.walks}</td>
-                    <td className="px-3 py-2">{calc.hbp}</td>
-                    <td className="px-3 py-2">{calc.sac_bunt}</td>
-                    <td className="px-3 py-2">{calc.sac_fly}</td>
-                    <td className="px-3 py-2">{calc.advancing_hits}</td>
-                    <td className="px-3 py-2">{calc.double_plays}</td>
-                    <td className="px-3 py-2">{formatAvg(calc.avg)}</td>
-                    <td className="px-3 py-2">{formatAvg(calc.obp)}</td>
-                    <td className="px-3 py-2">{formatAvg(calc.slg)}</td>
-                    <td className="px-3 py-2">{formatAvg(calc.ops)}</td>
-                    <td className="px-3 py-2">{formatAvg(calc.risp_avg)}</td>
-                    <td className="px-3 py-2">{calc.rc27.toFixed(2)}</td>
-                    <td className="px-3 py-2">{point ?? "-"}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{gamesPlayed}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.pa}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.ab}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.runs}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.hits}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.doubles}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.triples}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.homeruns}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.total_bases}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.rbi}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.steals}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.caught_stealing}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.picked_off}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.strikeouts}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.walks}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.hbp}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.sac_bunt}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.sac_fly}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.advancing_hits}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.double_plays}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatAvg(calc.avg)}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatAvg(calc.obp)}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatAvg(calc.slg)}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatAvg(calc.ops)}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatAvg(calc.risp_avg)}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.rc27.toFixed(2)}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{point ?? "-"}</td>
                   </tr>
                 </Fragment>
               ))}
@@ -436,26 +436,26 @@ export default async function StatsPage({ searchParams }: PageProps) {
           </span>
         </div>
         <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
-          <table className="w-full min-w-max text-right text-sm tabular-nums">
+          <table className="w-full min-w-max text-right text-[10px] sm:text-sm tabular-nums">
             <thead className="bg-surface-muted">
               <tr>
-                <th className="px-3 py-2 text-left font-medium text-foreground/50">選手</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">試合</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">先発</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">勝</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">負</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">Ｓ</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">Ｈ</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">投球回</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">防御率</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">失点率</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">奪三振</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">奪三振率</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">与四死球率</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">WHIP</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">QS</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">QS率</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">POINT</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium text-foreground/50">選手</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">試合</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">先発</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">勝</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">負</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">Ｓ</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">Ｈ</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">投球回</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">防御率</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">失点率</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">奪三振</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">奪三振率</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">与四死球率</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">WHIP</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">QS</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">QS率</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">POINT</th>
               </tr>
             </thead>
             <tbody>
@@ -463,35 +463,35 @@ export default async function StatsPage({ searchParams }: PageProps) {
                 <Fragment key={player.id}>
                   {i === pitchingQualifiedCount && pitchingQualifiedCount > 0 && (
                     <tr key="divider">
-                      <td colSpan={17} className="border-t border-border-subtle bg-surface-muted px-3 py-1 text-left text-xs text-foreground/50">
+                      <td colSpan={17} className="border-t border-border-subtle bg-surface-muted px-1 py-1 sm:px-3 text-left text-[10px] sm:text-xs text-foreground/50">
                         規定投球回未満
                       </td>
                     </tr>
                   )}
                   <tr className={`border-t border-border-subtle ${qualified ? "" : "text-foreground/50"}`}>
-                    <td className="px-3 py-2 text-left font-medium">
+                    <td className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium">
                       <Link href={`/players/${player.id}`} className="hover:underline">
                         {player.name}
                       </Link>
                     </td>
-                    <td className="px-3 py-2">{calc.games}</td>
-                    <td className="px-3 py-2">{calc.starts}</td>
-                    <td className="px-3 py-2">{calc.wins}</td>
-                    <td className="px-3 py-2">{calc.losses}</td>
-                    <td className="px-3 py-2">{calc.saves}</td>
-                    <td className="px-3 py-2">{calc.holds}</td>
-                    <td className="px-3 py-2">{formatInnings(calc.outs)}</td>
-                    <td className="px-3 py-2">{formatRate(calc.era)}</td>
-                    <td className="px-3 py-2">{formatRate(calc.ra)}</td>
-                    <td className="px-3 py-2">{calc.strikeouts}</td>
-                    <td className="px-3 py-2">{formatRate(calc.kRate)}</td>
-                    <td className="px-3 py-2">{formatRate(calc.bbHbpRate)}</td>
-                    <td className="px-3 py-2">{formatRate(calc.whip)}</td>
-                    <td className="px-3 py-2">{calc.qs}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.games}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.starts}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.wins}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.losses}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.saves}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.holds}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatInnings(calc.outs)}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatRate(calc.era)}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatRate(calc.ra)}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.strikeouts}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatRate(calc.kRate)}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatRate(calc.bbHbpRate)}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{formatRate(calc.whip)}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.qs}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">
                       {calc.starts > 0 ? `${calc.qsRate.toFixed(1)}%` : "-"}
                     </td>
-                    <td className="px-3 py-2">{point ?? "-"}</td>
+                    <td className="px-1 py-1 sm:px-3 sm:py-2">{point ?? "-"}</td>
                   </tr>
                 </Fragment>
               ))}
@@ -510,34 +510,34 @@ export default async function StatsPage({ searchParams }: PageProps) {
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">守備成績</h2>
         <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
-          <table className="w-full min-w-max text-right text-sm tabular-nums">
+          <table className="w-full min-w-max text-right text-[10px] sm:text-sm tabular-nums">
             <thead className="bg-surface-muted">
               <tr>
-                <th className="px-3 py-2 text-left font-medium text-foreground/50">選手</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">試合</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">刺殺</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">補殺</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">失策</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">美技</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">珍技</th>
-                <th className="px-3 py-2 font-medium text-foreground/50">守備率</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium text-foreground/50">選手</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">試合</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">刺殺</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">補殺</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">失策</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">美技</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">珍技</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">守備率</th>
               </tr>
             </thead>
             <tbody>
               {fieldingResults.map(({ player, calc }) => (
                 <tr key={player.id} className="border-t border-border-subtle">
-                  <td className="px-3 py-2 text-left font-medium">
+                  <td className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium">
                     <Link href={`/players/${player.id}`} className="hover:underline">
                       {player.name}
                     </Link>
                   </td>
-                  <td className="px-3 py-2">{calc.games}</td>
-                  <td className="px-3 py-2">{calc.putout}</td>
-                  <td className="px-3 py-2">{calc.assist}</td>
-                  <td className="px-3 py-2">{calc.error}</td>
-                  <td className="px-3 py-2">{calc.beauty}</td>
-                  <td className="px-3 py-2">{calc.rarePlay}</td>
-                  <td className="px-3 py-2">{formatAvg(calc.fieldingPct)}</td>
+                  <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.games}</td>
+                  <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.putout}</td>
+                  <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.assist}</td>
+                  <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.error}</td>
+                  <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.beauty}</td>
+                  <td className="px-1 py-1 sm:px-3 sm:py-2">{calc.rarePlay}</td>
+                  <td className="px-1 py-1 sm:px-3 sm:py-2">{formatAvg(calc.fieldingPct)}</td>
                 </tr>
               ))}
               {fieldingResults.length === 0 && (
@@ -555,12 +555,12 @@ export default async function StatsPage({ searchParams }: PageProps) {
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">サポート実績</h2>
         <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
-          <table className="w-full min-w-max text-right text-sm tabular-nums">
+          <table className="w-full min-w-max text-right text-[10px] sm:text-sm tabular-nums">
             <thead className="bg-surface-muted">
               <tr>
-                <th className="px-3 py-2 text-left font-medium text-foreground/50">選手</th>
+                <th className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium text-foreground/50">選手</th>
                 {SUPPORT_ROLES.map(({ key, label }) => (
-                  <th key={key} className="px-3 py-2 font-medium text-foreground/50">
+                  <th key={key} className="px-1 py-1 sm:px-3 sm:py-2 font-medium text-foreground/50">
                     {label}
                   </th>
                 ))}
@@ -569,13 +569,13 @@ export default async function StatsPage({ searchParams }: PageProps) {
             <tbody>
               {supportResults.map(({ player, totals }) => (
                 <tr key={player.id} className="border-t border-border-subtle">
-                  <td className="px-3 py-2 text-left font-medium">
+                  <td className="px-1 py-1 sm:px-3 sm:py-2 text-left font-medium">
                     <Link href={`/players/${player.id}`} className="hover:underline">
                       {player.name}
                     </Link>
                   </td>
                   {SUPPORT_ROLES.map(({ key }) => (
-                    <td key={key} className="px-3 py-2">
+                    <td key={key} className="px-1 py-1 sm:px-3 sm:py-2">
                       {totals[key]}
                     </td>
                   ))}
