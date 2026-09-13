@@ -186,6 +186,7 @@ export default async function GameDetailPage({ params }: PageProps) {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-bold">打者成績</h2>
+        <p className="text-[10px] text-foreground/40 sm:hidden">← 横にスクロールできます →</p>
         <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
           <table className="w-full min-w-max text-center text-[10px] sm:text-sm tabular-nums">
             <thead className="bg-surface-muted">
@@ -258,6 +259,7 @@ export default async function GameDetailPage({ params }: PageProps) {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-bold">投手成績</h2>
+        <p className="text-[10px] text-foreground/40 sm:hidden">← 横にスクロールできます →</p>
         <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
           <table className="w-full min-w-max text-center text-[10px] sm:text-sm tabular-nums">
             <thead className="bg-surface-muted">

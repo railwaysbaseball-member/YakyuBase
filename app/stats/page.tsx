@@ -420,6 +420,7 @@ export default async function StatsPage({ searchParams }: PageProps) {
             規定打席: {requiredPa ?? "-"}打席以上（{teamGames}試合）
           </span>
         </div>
+        <p className="text-[10px] text-foreground/40 sm:hidden">← 横にスクロールできます →</p>
         <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
           <table className="w-full min-w-max text-right text-[10px] sm:text-sm tabular-nums">
             <thead className="bg-surface-muted">
@@ -510,6 +511,7 @@ export default async function StatsPage({ searchParams }: PageProps) {
             規定投球回: {requiredIp ?? "-"}回以上（{teamGames}試合）
           </span>
         </div>
+        <p className="text-[10px] text-foreground/40 sm:hidden">← 横にスクロールできます →</p>
         <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
           <table className="w-full min-w-max text-right text-[10px] sm:text-sm tabular-nums">
             <thead className="bg-surface-muted">
