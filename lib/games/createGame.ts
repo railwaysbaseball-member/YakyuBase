@@ -63,23 +63,27 @@ export async function createGame(
   const gameId = nextGameId(payload.date, (existingGames ?? []).map((g) => g.id as string));
 
   // --- 新規選手のupsert（batting/pitchingのFK先になるため先に登録） ---
+  // 試合本体の登録はFK依存が無いため、選手upsertと並列に実行する。
   const newPlayerNames = newPlayerNamesFromPayload(payload);
-  if (newPlayerNames.size > 0) {
-    const rows = [...newPlayerNames].map((name) => ({ id: name, name }));
-    const { error: playersError } = await supabase
-      .from("players")
-      .upsert(rows, { onConflict: "id", ignoreDuplicates: true });
-    if (playersError) {
-      return { error: "選手の新規登録に失敗しました: " + playersError.message };
-    }
+
+  const [playersResult, gameResult] = await Promise.all([
+    newPlayerNames.size > 0
+      ? supabase
+          .from("players")
+          .upsert(
+            [...newPlayerNames].map((name) => ({ id: name, name })),
+            { onConflict: "id", ignoreDuplicates: true }
+          )
+      : Promise.resolve({ error: null }),
+    supabase.from("games").insert(buildGameRow(gameId, payload)),
+  ]);
+  if (playersResult.error) {
+    return { error: "選手の新規登録に失敗しました: " + playersResult.error.message };
+  }
+  if (gameResult.error) {
+    return { error: "試合の登録に失敗しました: " + gameResult.error.message };
   }
 
-  const { error: gameError } = await supabase.from("games").insert(buildGameRow(gameId, payload));
-  if (gameError) {
-    return { error: "試合の登録に失敗しました: " + gameError.message };
-  }
-
-  // --- 打者成績 ---
   const battingRows = payload.batters.map((b) => {
     const plateResults = b.plateResults
       .map(buildPlateResult)
@@ -99,46 +103,54 @@ export async function createGame(
       steals: calc.steals,
     };
   });
-
-  const { error: battingError } = await supabase.from("game_batting_stats").insert(battingRows);
-  if (battingError) {
-    await supabase.from("games").delete().eq("id", gameId);
-    return { error: "打撃成績の登録に失敗しました: " + battingError.message };
-  }
-
-  // --- 投手成績 ---
-  const { error: pitchingError } = await supabase
-    .from("game_pitching_stats")
-    .insert(buildPitchingRows(gameId, payload));
-  if (pitchingError) {
-    await supabase.from("game_batting_stats").delete().eq("game_id", gameId);
-    await supabase.from("games").delete().eq("id", gameId);
-    return { error: "投手成績の登録に失敗しました: " + pitchingError.message };
-  }
-
-  // --- 守備成績（任意項目。1件も無ければ何もしない） ---
+  const pitchingRows = buildPitchingRows(gameId, payload);
   const fieldingRows = buildFieldingRows(gameId, payload);
-  if (fieldingRows.length > 0) {
-    const { error: fieldingError } = await supabase.from("game_fielding_stats").insert(fieldingRows);
-    if (fieldingError) {
-      await supabase.from("game_pitching_stats").delete().eq("game_id", gameId);
-      await supabase.from("game_batting_stats").delete().eq("game_id", gameId);
-      await supabase.from("games").delete().eq("id", gameId);
-      return { error: "守備成績の登録に失敗しました: " + fieldingError.message };
-    }
-  }
-
-  // --- サポート実績（任意項目。1件も無ければ何もしない） ---
   const supportRows = buildSupportRows(gameId, payload);
-  if (supportRows.length > 0) {
-    const { error: supportError } = await supabase.from("support_stats").insert(supportRows);
-    if (supportError) {
-      await supabase.from("game_fielding_stats").delete().eq("game_id", gameId);
-      await supabase.from("game_pitching_stats").delete().eq("game_id", gameId);
-      await supabase.from("game_batting_stats").delete().eq("game_id", gameId);
-      await supabase.from("games").delete().eq("id", gameId);
-      return { error: "サポート実績の登録に失敗しました: " + supportError.message };
+
+  // --- 打者/投手/守備/サポートを並列でinsert（互いに依存が無いため） ---
+  const [battingInsert, pitchingInsert, fieldingInsert, supportInsert] = await Promise.all([
+    supabase.from("game_batting_stats").insert(battingRows),
+    supabase.from("game_pitching_stats").insert(pitchingRows),
+    fieldingRows.length > 0
+      ? supabase.from("game_fielding_stats").insert(fieldingRows)
+      : Promise.resolve({ error: null }),
+    supportRows.length > 0
+      ? supabase.from("support_stats").insert(supportRows)
+      : Promise.resolve({ error: null }),
+  ]);
+
+  const insertError =
+    battingInsert.error ?? pitchingInsert.error ?? fieldingInsert.error ?? supportInsert.error;
+
+  if (insertError) {
+    // 成功した分だけロールバックしてから、優先順位（打撃→投手→守備→サポート）で
+    // 最初に見つかったエラーを報告する。
+    await Promise.all([
+      !battingInsert.error
+        ? supabase.from("game_batting_stats").delete().eq("game_id", gameId)
+        : Promise.resolve(),
+      !pitchingInsert.error
+        ? supabase.from("game_pitching_stats").delete().eq("game_id", gameId)
+        : Promise.resolve(),
+      !fieldingInsert.error
+        ? supabase.from("game_fielding_stats").delete().eq("game_id", gameId)
+        : Promise.resolve(),
+      !supportInsert.error
+        ? supabase.from("support_stats").delete().eq("game_id", gameId)
+        : Promise.resolve(),
+    ]);
+    await supabase.from("games").delete().eq("id", gameId);
+
+    if (battingInsert.error) {
+      return { error: "打撃成績の登録に失敗しました: " + battingInsert.error.message };
     }
+    if (pitchingInsert.error) {
+      return { error: "投手成績の登録に失敗しました: " + pitchingInsert.error.message };
+    }
+    if (fieldingInsert.error) {
+      return { error: "守備成績の登録に失敗しました: " + fieldingInsert.error.message };
+    }
+    return { error: "サポート実績の登録に失敗しました: " + supportInsert.error!.message };
   }
 
   revalidatePath("/games");

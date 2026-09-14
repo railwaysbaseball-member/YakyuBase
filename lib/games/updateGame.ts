@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/utils/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/auth/session";
 import { calcBatting } from "@/lib/batting/calcBattingStats";
 import {
@@ -21,6 +22,31 @@ import {
 import type { PlateResult } from "@/types/plateResult";
 
 export type UpdateGameState = { error: string } | undefined;
+
+type ReplaceTableName =
+  | "game_batting_stats"
+  | "game_pitching_stats"
+  | "game_fielding_stats"
+  | "support_stats";
+
+// 指定テーブルの既存行(game_id一致分)を削除してから作り直す。delete/insertは
+// テーブル内では順番が必要だが、テーブル間には依存が無いためPromise.allで並列に呼ぶ。
+async function replaceTableRows(
+  supabase: SupabaseClient,
+  table: ReplaceTableName,
+  gameId: string,
+  rows: Record<string, unknown>[]
+): Promise<{ phase: "delete" | "insert"; message: string } | null> {
+  const { error: deleteError } = await supabase.from(table).delete().eq("game_id", gameId);
+  if (deleteError) return { phase: "delete", message: deleteError.message };
+
+  if (rows.length === 0) return null;
+
+  const { error: insertError } = await supabase.from(table).insert(rows);
+  if (insertError) return { phase: "insert", message: insertError.message };
+
+  return null;
+}
 
 export async function updateGame(
   gameId: string,
@@ -42,24 +68,28 @@ export async function updateGame(
   const supabase = await createClient();
 
   // --- 新規選手のupsert（batting/pitchingのFK先になるため先に登録） ---
+  // 試合本体の更新はFK依存が無いため、選手upsertと並列に実行する。
   const newPlayerNames = newPlayerNamesFromPayload(payload);
-  if (newPlayerNames.size > 0) {
-    const rows = [...newPlayerNames].map((name) => ({ id: name, name }));
-    const { error: playersError } = await supabase
-      .from("players")
-      .upsert(rows, { onConflict: "id", ignoreDuplicates: true });
-    if (playersError) {
-      return { error: "選手の新規登録に失敗しました: " + playersError.message };
-    }
-  }
-
   const { id: _id, ...gameFields } = buildGameRow(gameId, payload);
-  const { error: gameError } = await supabase.from("games").update(gameFields).eq("id", gameId);
-  if (gameError) {
-    return { error: "試合の更新に失敗しました: " + gameError.message };
+
+  const [playersResult, gameResult] = await Promise.all([
+    newPlayerNames.size > 0
+      ? supabase
+          .from("players")
+          .upsert(
+            [...newPlayerNames].map((name) => ({ id: name, name })),
+            { onConflict: "id", ignoreDuplicates: true }
+          )
+      : Promise.resolve({ error: null }),
+    supabase.from("games").update(gameFields).eq("id", gameId),
+  ]);
+  if (playersResult.error) {
+    return { error: "選手の新規登録に失敗しました: " + playersResult.error.message };
+  }
+  if (gameResult.error) {
+    return { error: "試合の更新に失敗しました: " + gameResult.error.message };
   }
 
-  // --- 打者成績（全置換: 既存行を削除してから作り直す） ---
   const battingRows = payload.batters.map((b) => {
     const plateResults = b.plateResults
       .map(buildPlateResult)
@@ -80,76 +110,23 @@ export async function updateGame(
     };
   });
 
-  const { error: battingDeleteError } = await supabase
-    .from("game_batting_stats")
-    .delete()
-    .eq("game_id", gameId);
-  if (battingDeleteError) {
-    return { error: "打撃成績の更新に失敗しました: " + battingDeleteError.message };
-  }
-  const { error: battingError } = await supabase.from("game_batting_stats").insert(battingRows);
-  if (battingError) {
-    return {
-      error:
-        "打撃成績の登録に失敗しました（既存データは削除済みです）: " + battingError.message,
-    };
-  }
+  // --- 打者/投手/守備/サポートの全置換をテーブルごとに並列実行 ---
+  const [battingFailure, pitchingFailure, fieldingFailure, supportFailure] = await Promise.all([
+    replaceTableRows(supabase, "game_batting_stats", gameId, battingRows),
+    replaceTableRows(supabase, "game_pitching_stats", gameId, buildPitchingRows(gameId, payload)),
+    replaceTableRows(supabase, "game_fielding_stats", gameId, buildFieldingRows(gameId, payload)),
+    replaceTableRows(supabase, "support_stats", gameId, buildSupportRows(gameId, payload)),
+  ]);
 
-  // --- 投手成績（全置換） ---
-  const { error: pitchingDeleteError } = await supabase
-    .from("game_pitching_stats")
-    .delete()
-    .eq("game_id", gameId);
-  if (pitchingDeleteError) {
-    return { error: "投手成績の更新に失敗しました: " + pitchingDeleteError.message };
-  }
-  const { error: pitchingError } = await supabase
-    .from("game_pitching_stats")
-    .insert(buildPitchingRows(gameId, payload));
-  if (pitchingError) {
-    return {
-      error:
-        "投手成績の登録に失敗しました（既存データは削除済みです）: " + pitchingError.message,
-    };
-  }
+  const describeFailure = (label: string, f: NonNullable<typeof battingFailure>) =>
+    f.phase === "delete"
+      ? `${label}の更新に失敗しました: ${f.message}`
+      : `${label}の登録に失敗しました（既存データは削除済みです）: ${f.message}`;
 
-  // --- 守備成績（全置換。任意項目のため0件でも正常） ---
-  const { error: fieldingDeleteError } = await supabase
-    .from("game_fielding_stats")
-    .delete()
-    .eq("game_id", gameId);
-  if (fieldingDeleteError) {
-    return { error: "守備成績の更新に失敗しました: " + fieldingDeleteError.message };
-  }
-  const fieldingRows = buildFieldingRows(gameId, payload);
-  if (fieldingRows.length > 0) {
-    const { error: fieldingError } = await supabase.from("game_fielding_stats").insert(fieldingRows);
-    if (fieldingError) {
-      return {
-        error:
-          "守備成績の登録に失敗しました（既存データは削除済みです）: " + fieldingError.message,
-      };
-    }
-  }
-
-  // --- サポート実績（全置換。任意項目のため0件でも正常） ---
-  const { error: supportDeleteError } = await supabase
-    .from("support_stats")
-    .delete()
-    .eq("game_id", gameId);
-  if (supportDeleteError) {
-    return { error: "サポート実績の更新に失敗しました: " + supportDeleteError.message };
-  }
-  const supportRows = buildSupportRows(gameId, payload);
-  if (supportRows.length > 0) {
-    const { error: supportError } = await supabase.from("support_stats").insert(supportRows);
-    if (supportError) {
-      return {
-        error:
-          "サポート実績の登録に失敗しました（既存データは削除済みです）: " + supportError.message,
-      };
-    }
-  }
+  if (battingFailure) return { error: describeFailure("打撃成績", battingFailure) };
+  if (pitchingFailure) return { error: describeFailure("投手成績", pitchingFailure) };
+  if (fieldingFailure) return { error: describeFailure("守備成績", fieldingFailure) };
+  if (supportFailure) return { error: describeFailure("サポート実績", supportFailure) };
 
   revalidatePath("/games");
   revalidatePath("/stats");
