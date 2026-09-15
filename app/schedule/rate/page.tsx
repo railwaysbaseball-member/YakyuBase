@@ -10,7 +10,7 @@ type PageProps = {
   searchParams: Promise<{ year?: string }>;
 };
 
-type PlayerRow = { id: string; name: string; number: number | null; is_guest: boolean };
+type PlayerRow = { id: string; name: string; number: number | null; is_guest: boolean; is_retired: boolean };
 type ScheduleRow = { id: string; date: string };
 
 export default async function ScheduleRatePage({ searchParams }: PageProps) {
@@ -23,7 +23,7 @@ export default async function ScheduleRatePage({ searchParams }: PageProps) {
       supabase.from("team_schedule").select("id, date").range(from, to)
     ),
     fetchAllRows<PlayerRow>((from, to) =>
-      supabase.from("players").select("id, name, number, is_guest").range(from, to)
+      supabase.from("players").select("id, name, number, is_guest, is_retired").range(from, to)
     ),
     fetchAllRows<Attendance>((from, to) =>
       sessionSupabase.from("schedule_attendance").select("*").range(from, to)
@@ -50,7 +50,7 @@ export default async function ScheduleRatePage({ searchParams }: PageProps) {
   }
 
   const nonGuestPlayers = (players ?? [])
-    .filter((p) => !p.is_guest)
+    .filter((p) => !p.is_guest && !p.is_retired)
     .slice()
     .sort((a, b) => {
       if (a.number == null && b.number == null) return a.name.localeCompare(b.name);

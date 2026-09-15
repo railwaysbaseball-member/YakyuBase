@@ -3,15 +3,15 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/session";
 import { supabase } from "@/utils/supabaseClient";
 import { fetchAllRows } from "@/utils/supabaseFetchAll";
-import GuestToggle from "./GuestToggle";
+import PlayerStatusToggle, { playerStatusOf } from "./PlayerStatusToggle";
 
-type PlayerRow = { id: string; name: string; number: number | null; is_guest: boolean };
+type PlayerRow = { id: string; name: string; number: number | null; is_guest: boolean; is_retired: boolean };
 
 export default async function PlayersPage() {
   await requireAdmin("/players");
 
   const { data: players } = await fetchAllRows<PlayerRow>((from, to) =>
-    supabase.from("players").select("id, name, number, is_guest").range(from, to)
+    supabase.from("players").select("id, name, number, is_guest, is_retired").range(from, to)
   );
 
   const sorted = (players ?? []).slice().sort((a, b) => {
@@ -26,7 +26,7 @@ export default async function PlayersPage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-bold">選手管理</h1>
         <p className="text-sm text-foreground/50">
-          「助っ人」に設定した選手は個人成績（/stats）に表示されなくなります。
+          「助っ人」に設定した選手は個人成績（/stats）に表示されなくなります。「退会済み」は出欠管理等の対象からは外れますが、個人成績には引き続き表示されます。
         </p>
       </div>
 
@@ -40,7 +40,7 @@ export default async function PlayersPage() {
               {p.number != null ? `${p.number} ` : ""}
               {p.name}
             </Link>
-            <GuestToggle playerId={p.id} isGuest={p.is_guest} />
+            <PlayerStatusToggle playerId={p.id} status={playerStatusOf(p)} />
           </div>
         ))}
         {sorted.length === 0 && (

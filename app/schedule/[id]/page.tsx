@@ -15,7 +15,7 @@ type PageProps = {
 
 type AttendanceValue = "出席" | "欠席" | "未定";
 type AttendanceRow = { player_id: string; attendance: AttendanceValue };
-type PlayerRow = { id: string; name: string; is_guest: boolean };
+type PlayerRow = { id: string; name: string; is_guest: boolean; is_retired: boolean };
 
 const STATUS_CLASS: Record<AttendanceValue, string> = {
   出席: "bg-win/10 text-win",
@@ -50,12 +50,12 @@ export default async function ScheduleDetailPage({ params }: PageProps) {
   const [{ data: attendanceRows }, { data: players }] = await Promise.all([
     sessionSupabase.from("schedule_attendance").select("player_id, attendance").eq("schedule_id", id),
     fetchAllRows<PlayerRow>((from, to) =>
-      supabase.from("players").select("id, name, is_guest").range(from, to)
+      supabase.from("players").select("id, name, is_guest, is_retired").range(from, to)
     ),
   ]);
 
   const nameById = new Map((players ?? []).map((p) => [p.id, p.name]));
-  const nonGuestPlayers = (players ?? []).filter((p) => !p.is_guest);
+  const nonGuestPlayers = (players ?? []).filter((p) => !p.is_guest && !p.is_retired);
 
   const byStatus: Record<AttendanceValue, string[]> = { 出席: [], 欠席: [], 未定: [] };
   const respondedIds = new Set<string>();

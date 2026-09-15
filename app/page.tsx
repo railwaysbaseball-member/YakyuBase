@@ -176,7 +176,7 @@ export default async function Home() {
         .select("player_id")
         .eq("schedule_id", (nextSchedule as TeamSchedule).id),
       fetchAllRows<{ id: string }>((from, to) =>
-        supabase.from("players").select("id").eq("is_guest", false).range(from, to)
+        supabase.from("players").select("id").eq("is_guest", false).eq("is_retired", false).range(from, to)
       ),
     ]);
     const respondedIds = new Set(((attendanceRows ?? []) as Pick<Attendance, "player_id">[]).map((a) => a.player_id));

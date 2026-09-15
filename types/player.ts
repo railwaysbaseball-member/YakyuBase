@@ -10,6 +10,9 @@ export type Player = {
   is_admin: boolean;
   /** true の場合は自チームの選手ではなく助っ人。個人成績(/stats)には表示しない */
   is_guest: boolean;
+  /** true の場合は退会済み。出欠管理等の現役メンバー対象からは除外するが、
+   *  個人成績(/stats)には在籍中の成績として引き続き表示する */
+  is_retired: boolean;
 
   created_at: string;
 };

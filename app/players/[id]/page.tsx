@@ -48,7 +48,7 @@ export default async function PlayerDetailPage({ params, searchParams }: PagePro
 
   const { data: player, error: playerError } = await supabase
     .from("players")
-    .select("id, name, number, is_guest")
+    .select("id, name, number, is_guest, is_retired")
     .eq("id", id)
     .maybeSingle();
   if (playerError || !player) {
@@ -303,7 +303,9 @@ export default async function PlayerDetailPage({ params, searchParams }: PagePro
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-10">
       <div className="flex flex-col gap-1">
-        <span className="text-xs text-foreground/50">選手詳細{player.is_guest ? "（助っ人）" : ""}</span>
+        <span className="text-xs text-foreground/50">
+          選手詳細{player.is_guest ? "（助っ人）" : player.is_retired ? "（退会済み）" : ""}
+        </span>
         <h1 className="text-2xl font-black tracking-tight">
           {player.number != null ? `${player.number} ` : ""}
           {player.name}

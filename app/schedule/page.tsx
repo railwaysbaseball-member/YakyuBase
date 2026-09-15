@@ -32,8 +32,8 @@ export default async function SchedulePage({ searchParams }: PageProps) {
     fetchAllRows<TeamSchedule>((from, to) =>
       supabase.from("team_schedule").select("*").order("date", { ascending: true }).range(from, to)
     ),
-    fetchAllRows<{ id: string; name: string; is_guest: boolean }>((from, to) =>
-      supabase.from("players").select("id, name, is_guest").range(from, to)
+    fetchAllRows<{ id: string; name: string; is_guest: boolean; is_retired: boolean }>((from, to) =>
+      supabase.from("players").select("id, name, is_guest, is_retired").range(from, to)
     ),
     getCurrentPlayer(),
   ]);
@@ -44,8 +44,8 @@ export default async function SchedulePage({ searchParams }: PageProps) {
   }
 
   const schedules = (scheduleRows ?? []) as TeamSchedule[];
-  // 助っ人は自チームの出欠管理対象ではないため「未回答」判定から除外する。
-  const nonGuestPlayers = (playerRows ?? []).filter((p) => !p.is_guest);
+  // 助っ人・退会済みは自チームの出欠管理対象ではないため「未回答」判定から除外する。
+  const nonGuestPlayers = (playerRows ?? []).filter((p) => !p.is_guest && !p.is_retired);
 
   // 出欠明細はログインユーザーのみ閲覧可（RLS）。未ログインでは取得できず
   // エラーになるので、その場合は出欠集計なしで表示する。
