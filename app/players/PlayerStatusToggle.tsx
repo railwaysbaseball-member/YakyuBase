@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 
-import { updatePlayerStatus, type PlayerStatus } from "@/lib/players/updatePlayerStatus";
+import { updatePlayerStatus } from "@/lib/players/updatePlayerStatus";
+import type { PlayerStatus } from "@/lib/players/playerStatus";
 
 const STATUSES: { value: PlayerStatus; label: string; activeClass: string }[] = [
   { value: "active", label: "自チーム", activeClass: "bg-win/10 text-win" },
@@ -40,12 +41,6 @@ function StatusButton({
       {state?.error && <span className="text-xs text-loss">{state.error}</span>}
     </form>
   );
-}
-
-export function playerStatusOf(p: { is_guest: boolean; is_retired: boolean }): PlayerStatus {
-  if (p.is_retired) return "retired";
-  if (p.is_guest) return "guest";
-  return "active";
 }
 
 export default function PlayerStatusToggle({

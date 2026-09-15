@@ -3,7 +3,8 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/session";
 import { supabase } from "@/utils/supabaseClient";
 import { fetchAllRows } from "@/utils/supabaseFetchAll";
-import PlayerStatusToggle, { playerStatusOf } from "./PlayerStatusToggle";
+import PlayerStatusToggle from "./PlayerStatusToggle";
+import { playerStatusOf } from "@/lib/players/playerStatus";
 
 type PlayerRow = { id: string; name: string; number: number | null; is_guest: boolean; is_retired: boolean };
 

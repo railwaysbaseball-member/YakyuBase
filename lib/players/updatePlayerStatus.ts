@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/utils/supabase/server";
 import { requireAdmin } from "@/lib/auth/session";
-
-export type PlayerStatus = "active" | "guest" | "retired";
+import type { PlayerStatus } from "@/lib/players/playerStatus";
 
 export type UpdatePlayerStatusState = { error: string } | undefined;
 
