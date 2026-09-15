@@ -19,8 +19,9 @@ export type PlateResult = {
   contact_type?: "ゴロ" | "フライ" | "ライナー" | "不明"; // 打球種類
 
   risp?: boolean;                // 得点圏（2塁または3塁）にランナーあり
+  bases_loaded?: boolean;        // 満塁
   advancing_hit?: boolean;       // 進塁打
-  winning_rbi?: boolean;         // 勝利打点
+  winning_rbi?: boolean;         // 勝利打点（V打）
 
   caught_stealing?: boolean;     // 盗塁死
   picked_off?: boolean;          // 牽制死

@@ -40,6 +40,14 @@ export type CalculatedBatting = {
   risp_hits: number;
   risp_avg: number;
 
+  // 満塁
+  bases_loaded_ab: number;
+  bases_loaded_hits: number;
+  bases_loaded_avg: number;
+
+  // 勝利打点（V打）
+  winning_rbis: number;
+
   // RC27
   rc27: number;
 };
@@ -75,6 +83,13 @@ export function calcBatting(results: PlateResult[]): CalculatedBatting {
   let risp_ab = 0;
   let risp_hits = 0;
 
+  // 満塁
+  let bases_loaded_ab = 0;
+  let bases_loaded_hits = 0;
+
+  // 勝利打点（V打）
+  let winning_rbis = 0;
+
   for (const pr of results) {
     // 得点
     if (pr.run) runs++;
@@ -93,6 +108,9 @@ export function calcBatting(results: PlateResult[]): CalculatedBatting {
     // 進塁打
     if (pr.advancing_hit) advancing_hits++;
 
+    // 勝利打点
+    if (pr.winning_rbi) winning_rbis++;
+
     // 「代走」は打席に立たず出塁した走者に代わって入る交代なので、
     // 得点・盗塁等はカウントするが打席・打数には数えない。
     if (pr.result === "代走") continue;
@@ -103,6 +121,9 @@ export function calcBatting(results: PlateResult[]): CalculatedBatting {
     // class='tktnkn' が付くかどうか（凡例:「：得点圏にランナーあり」）でしか
     // 判定できないため、risp は単純な真偽値。
     const risp = !!pr.risp;
+    // 満塁判定。得点圏と同じく、打席時点で満塁だったかを示す単純な真偽値
+    // （スコアラーが打席ごとに手動で記録する想定。得点圏と重複してもよい）。
+    const basesLoaded = !!pr.bases_loaded;
 
     // 打席結果の分類
     const res = pr.result;
@@ -138,6 +159,7 @@ export function calcBatting(results: PlateResult[]): CalculatedBatting {
       strikeouts++;
       ab++;
       if (risp) risp_ab++;
+      if (basesLoaded) bases_loaded_ab++;
       continue;
     }
 
@@ -171,6 +193,10 @@ export function calcBatting(results: PlateResult[]): CalculatedBatting {
         risp_ab++;
         risp_hits++;
       }
+      if (basesLoaded) {
+        bases_loaded_ab++;
+        bases_loaded_hits++;
+      }
 
       continue;
     }
@@ -188,6 +214,7 @@ export function calcBatting(results: PlateResult[]): CalculatedBatting {
     // その他のアウト → 打数に含める
     ab++;
     if (risp) risp_ab++;
+    if (basesLoaded) bases_loaded_ab++;
   }
 
   // 打率
@@ -205,6 +232,9 @@ export function calcBatting(results: PlateResult[]): CalculatedBatting {
 
   // 得点圏打率
   const risp_avg = risp_ab > 0 ? risp_hits / risp_ab : 0;
+
+  // 満塁打率
+  const bases_loaded_avg = bases_loaded_ab > 0 ? bases_loaded_hits / bases_loaded_ab : 0;
 
   // RC27（Runs Created per 27 outs）
   // Bill James の Basic RC（(H+BB)*TB/(AB+BB)）を「真のアウト数」あたりに換算する。
@@ -249,6 +279,10 @@ export function calcBatting(results: PlateResult[]): CalculatedBatting {
     risp_ab,
     risp_hits,
     risp_avg,
+    bases_loaded_ab,
+    bases_loaded_hits,
+    bases_loaded_avg,
+    winning_rbis,
     rc27,
   };
 }

@@ -64,10 +64,12 @@ function plateResult(overrides: Partial<PlateResultDraft> = {}): PlateResultDraf
     rbi: "0",
     steal: "0",
     risp: false,
+    basesLoaded: false,
     advancingHit: false,
     caughtStealing: false,
     pickedOff: false,
     doublePlay: false,
+    winningRbi: false,
     ...overrides,
   };
 }

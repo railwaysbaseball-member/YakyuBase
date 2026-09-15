@@ -76,6 +76,14 @@ export default function PlateResultRow({
         />
         得点圏
       </label>
+      <label className="flex items-center gap-1 text-xs">
+        <input
+          type="checkbox"
+          checked={value.basesLoaded}
+          onChange={(e) => onChange({ ...value, basesLoaded: e.target.checked })}
+        />
+        満塁
+      </label>
 
       <details className="text-xs">
         <summary className="cursor-pointer text-foreground/50">詳細</summary>
@@ -111,6 +119,14 @@ export default function PlateResultRow({
               onChange={(e) => onChange({ ...value, doublePlay: e.target.checked })}
             />
             併殺打
+          </label>
+          <label className="flex items-center gap-1">
+            <input
+              type="checkbox"
+              checked={value.winningRbi}
+              onChange={(e) => onChange({ ...value, winningRbi: e.target.checked })}
+            />
+            勝利打点
           </label>
         </div>
       </details>

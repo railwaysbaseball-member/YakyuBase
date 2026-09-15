@@ -115,6 +115,26 @@ describe("calcBatting", () => {
     expect(calc.risp_avg).toBeCloseTo(0.5);
   });
 
+  it("only counts bases-loaded AB/hits when the result is flagged bases_loaded", () => {
+    const calc = calcBatting([
+      pr(1, "中安"), // bases_loaded未設定 -> 対象外
+      pr(2, "右安", { bases_loaded: true }), // 満塁での安打
+      pr(3, "三振", { bases_loaded: true }), // 満塁での打数（安打なし）
+      pr(4, "四球", { bases_loaded: true }), // 四球は打数に含まれない
+    ]);
+    expect(calc.bases_loaded_ab).toBe(2);
+    expect(calc.bases_loaded_hits).toBe(1);
+    expect(calc.bases_loaded_avg).toBeCloseTo(0.5);
+  });
+
+  it("counts winning_rbi-flagged plate appearances", () => {
+    const calc = calcBatting([
+      pr(1, "中安", { rbi: 1, winning_rbi: true }),
+      pr(2, "右安", { rbi: 1 }),
+    ]);
+    expect(calc.winning_rbis).toBe(1);
+  });
+
   it("computes AVG/OBP/SLG/OPS with the standard formulas", () => {
     const calc = calcBatting([
       pr(1, "中安"), // single

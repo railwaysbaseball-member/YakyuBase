@@ -85,6 +85,10 @@ function batting(overrides: Partial<CalculatedBatting> = {}): CalculatedBatting 
     risp_ab: 0,
     risp_hits: 0,
     risp_avg: 0,
+    bases_loaded_ab: 0,
+    bases_loaded_hits: 0,
+    bases_loaded_avg: 0,
+    winning_rbis: 0,
     rc27: 0,
     ...overrides,
   };

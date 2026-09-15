@@ -368,6 +368,8 @@ export default async function PlayerDetailPage({ params, searchParams }: PagePro
               { label: "長打率", value: formatAvg(battingCalc.slg) },
               { label: "OPS", value: formatAvg(battingCalc.ops) },
               { label: "得点圏打率", value: formatAvg(battingCalc.risp_avg) },
+              { label: "満塁打率", value: formatAvg(battingCalc.bases_loaded_avg) },
+              { label: "勝利打点", value: battingCalc.winning_rbis },
               { label: "RC27", value: battingCalc.rc27.toFixed(2) },
               { label: "POINT", value: batterPoint ?? "-" },
             ]}

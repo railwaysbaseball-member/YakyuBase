@@ -74,10 +74,12 @@ function plateResultToDraft(pr: PlateResult): PlateResultDraft {
     rbi: String(pr.rbi ?? 0),
     steal: String(pr.steal ?? 0),
     risp: !!pr.risp,
+    basesLoaded: !!pr.bases_loaded,
     advancingHit: !!pr.advancing_hit,
     caughtStealing: !!pr.caught_stealing,
     pickedOff: !!pr.picked_off,
     doublePlay: !!pr.double_play,
+    winningRbi: !!pr.winning_rbi,
   };
 }
 

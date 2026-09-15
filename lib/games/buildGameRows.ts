@@ -13,10 +13,12 @@ export type PlateResultDraft = {
   rbi: string;
   steal: string;
   risp: boolean;
+  basesLoaded: boolean;
   advancingHit: boolean;
   caughtStealing: boolean;
   pickedOff: boolean;
   doublePlay: boolean;
+  winningRbi: boolean;
 };
 
 export type BatterDraft = {
@@ -134,10 +136,12 @@ export function buildPlateResult(d: PlateResultDraft): PlateResult | null {
     ...(rbi > 0 ? { rbi } : {}),
     ...(steal > 0 ? { steal } : {}),
     ...(d.risp ? { risp: true } : {}),
+    ...(d.basesLoaded ? { bases_loaded: true } : {}),
     ...(d.advancingHit ? { advancing_hit: true } : {}),
     ...(d.caughtStealing ? { caught_stealing: true } : {}),
     ...(d.pickedOff ? { picked_off: true } : {}),
     ...(d.doublePlay ? { double_play: true } : {}),
+    ...(d.winningRbi ? { winning_rbi: true } : {}),
   };
 }
 

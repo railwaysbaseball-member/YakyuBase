@@ -59,6 +59,8 @@ const BATTING_SORT_COLUMNS: {
   { key: "slg", label: "長打率", defaultDir: "desc", getValue: (r) => r.calc.slg, higherIsBetter: true },
   { key: "ops", label: "OPS", defaultDir: "desc", getValue: (r) => r.calc.ops, higherIsBetter: true },
   { key: "risp", label: "得点圏", defaultDir: "desc", getValue: (r) => r.calc.risp_avg, higherIsBetter: true },
+  { key: "bases_loaded", label: "満塁", defaultDir: "desc", getValue: (r) => r.calc.bases_loaded_avg, higherIsBetter: true },
+  { key: "winning_rbi", label: "V打", defaultDir: "desc", getValue: (r) => r.calc.winning_rbis, higherIsBetter: true },
   { key: "rc27", label: "RC27", defaultDir: "desc", getValue: (r) => r.calc.rc27, higherIsBetter: true },
   { key: "point", label: "POINT", defaultDir: "desc", getValue: (r) => r.point ?? -Infinity, higherIsBetter: true },
 ];
@@ -487,6 +489,8 @@ export default async function StatsPage({ searchParams }: PageProps) {
                     <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.slg, battingLeaders.slg) ? LEADER_CLASS : ""}`}>{formatAvg(calc.slg)}</td>
                     <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.ops, battingLeaders.ops) ? LEADER_CLASS : ""}`}>{formatAvg(calc.ops)}</td>
                     <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.risp_avg, battingLeaders.risp) ? LEADER_CLASS : ""}`}>{formatAvg(calc.risp_avg)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.bases_loaded_avg, battingLeaders.bases_loaded) ? LEADER_CLASS : ""}`}>{formatAvg(calc.bases_loaded_avg)}</td>
+                    <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.winning_rbis, battingLeaders.winning_rbi) ? LEADER_CLASS : ""}`}>{calc.winning_rbis}</td>
                     <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(calc.rc27, battingLeaders.rc27) ? LEADER_CLASS : ""}`}>{calc.rc27.toFixed(2)}</td>
                     <td className={`px-1 py-1 sm:px-3 sm:py-2 ${qualified && isLeader(point ?? -Infinity, battingLeaders.point) ? LEADER_CLASS : ""}`}>{point ?? "-"}</td>
                   </tr>

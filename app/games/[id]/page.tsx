@@ -238,6 +238,8 @@ export default async function GameDetailPage({ params }: PageProps) {
                             {pr.result}
                             {pr.rbi ? `(${pr.rbi})` : ""}
                             {pr.steal ? (pr.steal > 1 ? `盗${pr.steal}` : "盗") : ""}
+                            {pr.bases_loaded ? "満" : ""}
+                            {pr.winning_rbi ? "V" : ""}
                             {pr.run ? "●" : ""}
                           </span>
                         </td>
