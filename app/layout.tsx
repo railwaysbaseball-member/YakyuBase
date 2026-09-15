@@ -65,12 +65,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </Suspense>
           </div>
 
-          <nav className="flex items-center justify-between gap-0.5 overflow-x-auto border-t border-border-subtle px-2 py-1.5 sm:hidden">
+          <nav className="flex flex-wrap items-center justify-center gap-x-1 gap-y-0.5 border-t border-border-subtle px-2 py-1.5 sm:hidden">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="shrink-0 rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap text-foreground/70 hover:bg-surface-muted hover:text-foreground"
+                className="rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap text-foreground/70 hover:bg-surface-muted hover:text-foreground"
               >
                 {link.label}
               </Link>
